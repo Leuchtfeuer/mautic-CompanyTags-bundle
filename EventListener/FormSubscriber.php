@@ -5,12 +5,23 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\EventListener;
 use Mautic\FormBundle\Event\FormBuilderEvent;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\FormEvents;
-use Mautic\LeadBundle\Entity\UtmTag;
+use Mautic\LeadBundle\Model\CompanyModel;
+use Mautic\LeadBundle\Tracker\ContactTracker;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\ModifyCompanyTagsType;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class FormSubscriber implements EventSubscriberInterface
 {
+    public function __construct(
+        private Config $config,
+        private ContactTracker $contactTracker,
+        private CompanyTagModel $companyTagsModel,
+        private CompanyModel $companyModel,
+    ) {
+    }
+
     public static function getSubscribedEvents()
     {
         return [
@@ -35,41 +46,39 @@ class FormSubscriber implements EventSubscriberInterface
 
     public function onFormSubmitActionAddUtmTags(SubmissionEvent $event): void
     {
-//        if (false === $event->checkContext('lead.addutmtags')) {
-//            return;
-//        }
-//
-//        if (!$contact = $this->contactTracker->getContact()) {
-//            return;
-//        }
-//
-//        $queryReferer = $queryArray = [];
-//
-//        parse_str($event->getRequest()->server->get('QUERY_STRING'), $queryArray);
-//        $refererURL       = $event->getRequest()->server->get('HTTP_REFERER');
-//        $refererParsedUrl = parse_url($refererURL);
-//
-//        if (isset($refererParsedUrl['query'])) {
-//            parse_str($refererParsedUrl['query'], $queryReferer);
-//        }
-//
-//        $utmValues = new UtmTag();
-//        $utmValues->setLead($contact);
-//        $utmValues->setQuery($event->getRequest()->query->all());
-//        $utmValues->setReferer($refererURL);
-//        $utmValues->setUrl($event->getRequest()->server->get('REQUEST_URI'));
-//        $utmValues->setDateAdded(new \DateTime());
-//        $utmValues->setRemoteHost($refererParsedUrl['host'] ?? null);
-//        $utmValues->setUserAgent($event->getRequest()->server->get('HTTP_USER_AGENT') ?? null);
-//        $utmValues->setUtmCampaign($queryArray['utm_campaign'] ?? $queryReferer['utm_campaign'] ?? null);
-//        $utmValues->setUtmContent($queryArray['utm_content'] ?? $queryReferer['utm_content'] ?? null);
-//        $utmValues->setUtmMedium($queryArray['utm_medium'] ?? $queryReferer['utm_medium'] ?? null);
-//        $utmValues->setUtmSource($queryArray['utm_source'] ?? $queryReferer['utm_source'] ?? null);
-//        $utmValues->setUtmTerm($queryArray['utm_term'] ?? $queryReferer['utm_term'] ?? null);
-//
-//        if ($utmValues->hasUtmTags()) {
-//            $this->leadModel->getUtmTagRepository()->saveEntity($utmValues);
-//            $this->leadModel->setUtmTags($utmValues->getLead(), $utmValues);
-//        }
+        if (!$this->config->isPublished()) {
+            return;
+        }
+
+        if (false === $event->checkContext('companytag.changetags')) {
+            return;
+        }
+
+        if (!$lead = $this->contactTracker->getContact()) {
+            return;
+        }
+
+        $properties  = $event->getAction()->getProperties();
+        $addTags     = $properties['add_tags'] ?: [];
+        $removeTags  = $properties['remove_tags'] ?: [];
+        $companyName = $lead->getCompany();
+        if (empty($companyName)) {
+            return;
+        }
+        $company = $this->companyModel->getRepository()->findOneBy(['name' => $companyName]);
+
+        $tagsToAdd = $this->companyTagsModel->getRepository()->findBy(
+            [
+                'tag'     => $addTags,
+            ]
+        );
+        $tagsToRemove = $this->companyTagsModel->getRepository()->findBy(
+            [
+                'tag'     => $removeTags,
+            ]
+        );
+        $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
+
+        $this->leadModel->modifyTags($contact, $addTags, $removeTags);
     }
 }

@@ -73,7 +73,7 @@ class CompanyTagModel extends FormModel
         $this->saveEntity($companyTags);
     }
 
-    public function updateCompanyTags(Company $company, array $addCompanyTags, array $removeCompanyTags= [])
+    public function updateCompanyTags(Company $company, array $addCompanyTags = [], array $removeCompanyTags= [])
     {
         if (empty($addCompanyTags) && empty($removeCompanyTags)) {
             return;
