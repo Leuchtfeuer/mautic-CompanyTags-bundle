@@ -15,7 +15,7 @@ class CompanyTagsRepository extends CommonRepository
         }
         $companyTag = new CompanyTags($name, true);
 
-        /** @var Tag|null $existingTag */
+        /** @var CompanyTags|null $existingTag */
         $existingTag = $this->findOneBy(
             [
                 'tag' => $companyTag->getTag(),
@@ -41,9 +41,9 @@ class CompanyTagsRepository extends CommonRepository
     /**
      * Get a count of leads that belong to the tag.
      *
-     * @return array
+     * @return array<int, int>|int
      */
-    public function countByLeads($tagIds)
+    public function countByLeads(array|int $tagIds): int|array
     {
         $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
 

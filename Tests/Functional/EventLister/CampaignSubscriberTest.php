@@ -157,7 +157,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $this->assertNotContains('CompanyTag1', $included);
     }
 
-    public function testModifyCompanyTagsWithoutTagsFromScratch()
+    public function testModifyCompanyTagsWithoutTagsFromScratch(): void
     {
         $companyTagModel = self::$container->get('mautic.companytag.model.companytag');
 
@@ -292,7 +292,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $this->assertNotContains('CompanyTag2', $included);
     }
 
-    private function activePlugin($isPublished = true)
+    private function activePlugin(bool $isPublished = true): void
     {
         $this->client->request('GET', '/s/plugins/reload');
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerCompanyTags']);

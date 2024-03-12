@@ -46,7 +46,13 @@ class CompanyTagController extends AbstractStandardFormController
         }
     }
 
-    public function indexAction(Request $request, $page = 1): RedirectResponse|JsonResponse|array|Response
+    /**
+     * @param Request $request
+     * @param int $page
+     * @return RedirectResponse|JsonResponse|array<mixed>|Response
+     * @throws \Exception
+     */
+    public function indexAction(Request $request, int $page = 1): RedirectResponse|JsonResponse|array|Response
     {
         // set some permissions
         $permissions = $this->security->isGranted(
@@ -177,9 +183,11 @@ class CompanyTagController extends AbstractStandardFormController
     }
 
     /**
+     * @param Request $request
+     * @return RedirectResponse|JsonResponse|Response
      * @throws \Exception
      */
-    public function newAction(Request $request): RedirectResponse|JsonResponse|array|Response
+    public function newAction(Request $request): RedirectResponse|JsonResponse|Response
     {
         return $this->newStandard($request);
     }
@@ -187,12 +195,12 @@ class CompanyTagController extends AbstractStandardFormController
     /**
      * @throws \Exception
      */
-    public function editAction(Request $request, $objectId, $ignorePost = false): RedirectResponse|JsonResponse|Response
+    public function editAction(Request $request, int $objectId, bool $ignorePost = false): RedirectResponse|JsonResponse|Response
     {
         return $this->editStandard($request, $objectId, $ignorePost);
     }
 
-    public function deleteAction(Request $request, $objectId): RedirectResponse|JsonResponse
+    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse
     {
         return $this->deleteStandard($request, $objectId);
     }
@@ -222,7 +230,12 @@ class CompanyTagController extends AbstractStandardFormController
         return '@LeuchtfeuerCompanyTags/CompanyTag';
     }
 
-    public function viewAction(Request $request, $objectId): RedirectResponse|JsonResponse|array|Response
+    /**
+     * @param Request $request
+     * @param int $objectId
+     * @return RedirectResponse|JsonResponse|array<mixed>|Response
+     */
+    public function viewAction(Request $request, int $objectId): RedirectResponse|JsonResponse|array|Response
     {
         $security = $this->security;
         $tag      = $this->companyTagModel->getEntity($objectId);

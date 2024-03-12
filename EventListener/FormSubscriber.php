@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\EventListener;
 
+use Mautic\CoreBundle\Exception\BadConfigurationException;
 use Mautic\FormBundle\Event\FormBuilderEvent;
 use Mautic\FormBundle\Event\SubmissionEvent;
 use Mautic\FormBundle\FormEvents;
@@ -22,7 +23,7 @@ class FormSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             FormEvents::FORM_ON_BUILD            => ['onFormBuilder', 0],
@@ -32,7 +33,10 @@ class FormSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onFormBuilder(FormBuilderEvent $event)
+    /**
+     * @throws BadConfigurationException
+     */
+    public function onFormBuilder(FormBuilderEvent $event): void
     {
         $event->addSubmitAction('companytag.changetags', [
             'group'             => 'mautic.companytag.companytags.submitaction',
@@ -66,6 +70,9 @@ class FormSubscriber implements EventSubscriberInterface
             return;
         }
         $company = $this->companyModel->getRepository()->findOneBy(['name' => $companyName]);
+        if (empty($company)) {
+            return;
+        }
 
         $tagsToAdd = $this->companyTagsModel->getRepository()->findBy(
             [
@@ -78,7 +85,5 @@ class FormSubscriber implements EventSubscriberInterface
             ]
         );
         $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
-
-        $this->leadModel->modifyTags($contact, $addTags, $removeTags);
     }
 }

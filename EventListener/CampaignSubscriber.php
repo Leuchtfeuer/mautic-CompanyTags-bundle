@@ -19,7 +19,7 @@ class CampaignSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD                        => 'onCampaignBuild',
@@ -27,7 +27,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onCampaignBuild(CampaignBuilderEvent $event)
+    public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
         $action = [
             'label'       => 'mautic.companytag.companytags.events.changetags',
@@ -38,7 +38,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         $event->addAction('companytag.changetags', $action);
     }
 
-    public function onCampaignTriggerAction(CampaignExecutionEvent $event)
+    public function onCampaignTriggerAction(CampaignExecutionEvent $event): void
     {
         if (!$event->checkContext('companytag.changetags')) {
             return;

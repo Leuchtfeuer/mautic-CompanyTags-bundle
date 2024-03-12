@@ -392,8 +392,8 @@ class CompanyController extends CompanyControllerBase
 
     /**
      * @param Request $request
-     * @param $objectId
-     * @return RedirectResponse|JsonResponse|array|Response
+     * @param int $objectId
+     * @return RedirectResponse|JsonResponse|array<mixed>|Response
      */
     public function viewAction(Request $request, $objectId): RedirectResponse|JsonResponse|array|Response
     {
@@ -487,7 +487,13 @@ class CompanyController extends CompanyControllerBase
         );
     }
 
-    private function customFormCompanyTags(Request $request, $objectAction, Company $company)
+    /**
+     * @param Request $request
+     * @param string $objectAction
+     * @param Company $company
+     * @return array<string, mixed>
+     */
+    private function customFormCompanyTags(Request $request, string $objectAction, Company $company): array
     {
         $requestData = [];
         if ($request->request->has('custom_company')) {

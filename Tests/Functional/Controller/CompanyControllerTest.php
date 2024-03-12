@@ -32,7 +32,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString('<span class="hidden-xs hidden-sm">New</span>', $this->client->getResponse()->getContent());
     }
 
-    public function testCheckFieldCompanyTags()
+    public function testCheckFieldCompanyTags(): void
     {
         $this->client->request('GET', '/s/companies/new');
         $this->assertResponseStatusCodeSame(200);
@@ -81,7 +81,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertCount(1, $companyTagsAfter);
     }
 
-    public function testFieldCompanyTagsIsWorking()
+    public function testFieldCompanyTagsIsWorking(): void
     {
         $this->testSaveNewAction();
         $companyEntity     = $this->em->getRepository(Company::class)->findOneBy(['name' => 'Test Company'], ['id' => 'DESC']);
@@ -100,7 +100,12 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertSame(self::TAG_TWO, $out2[0][0]);
     }
 
-    private function addCompanyTags()
+    /**
+     * @return array<CompanyTags>
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    private function addCompanyTags(): array
     {
         $companyTag1 = new CompanyTags();
         $companyTag1->setTag(self::TAG_ONE);
@@ -118,7 +123,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         ];
     }
 
-    private function activePlugin($isPublished = true)
+    private function activePlugin(bool $isPublished = true): void
     {
         $this->client->request('GET', '/s/plugins/reload');
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerCompanyTags']);
