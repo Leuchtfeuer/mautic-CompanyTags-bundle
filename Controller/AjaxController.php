@@ -17,6 +17,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AjaxController extends CommonAjaxController
 {
@@ -38,14 +39,12 @@ class AjaxController extends CommonAjaxController
         parent::__construct($doctrine, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
     }
 
-    public function addCompanyTagsAction(Request $request)
+    public function addCompanyTagsAction(Request $request): JsonResponse
     {
         $tags = $request->request->get('tags');
         $tags = json_decode($tags, true);
 
         if (is_array($tags)) {
-//            $leadModel = $this->getModel('lead');
-//            \assert($leadModel instanceof LeadModel);
             $newTags   = [];
 
             foreach ($tags as $tag) {

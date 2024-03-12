@@ -26,6 +26,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class CompanyController extends CompanyControllerBase
 {
@@ -47,101 +48,6 @@ class CompanyController extends CompanyControllerBase
     ) {
         parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
     }
-
-//    public function indexAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $page = 1)
-//    {
-//        // set some permissions
-//        $permissions = $this->security->isGranted(
-//            [
-//                'lead:leads:viewown',
-//                'lead:leads:viewother',
-//                'lead:leads:create',
-//                'lead:leads:editother',
-//                'lead:leads:editown',
-//                'lead:leads:deleteown',
-//                'lead:leads:deleteother',
-//            ],
-//            'RETURN_ARRAY'
-//        );
-//
-//        if (!$permissions['lead:leads:viewother'] && !$permissions['lead:leads:viewown']) {
-//            return $this->accessDenied();
-//        }
-//
-//        $this->setListFilters();
-//
-//        $pageHelper = $pageHelperFactory->make('mautic.company', $page);
-//
-//        $limit      = $pageHelper->getLimit();
-//        $start      = $pageHelper->getStart();
-//        $search     = $request->get('search', $request->getSession()->get('mautic.company.filter', ''));
-//        $filter     = ['string' => $search, 'force' => []];
-//        $orderBy    = $request->getSession()->get('mautic.company.orderby', 'comp.companyname');
-//        $orderByDir = $request->getSession()->get('mautic.company.orderbydir', 'ASC');
-//
-//        $companies = $this->getModel('lead.company')->getEntities(
-//            [
-//                'start'          => $start,
-//                'limit'          => $limit,
-//                'filter'         => $filter,
-//                'orderBy'        => $orderBy,
-//                'orderByDir'     => $orderByDir,
-//                'withTotalCount' => true,
-//            ]
-//        );
-//
-//        $request->getSession()->set('mautic.company.filter', $search);
-//
-//        $count     = $companies['count'];
-//        $companies = $companies['results'];
-//
-//        if ($count && $count < ($start + 1)) {
-//            $lastPage  = $pageHelper->countPage($count);
-//            $returnUrl = $this->generateUrl('mautic_company_index', ['page' => $lastPage]);
-//            $pageHelper->rememberPage($lastPage);
-//
-//            return $this->postActionRedirect(
-//                [
-//                    'returnUrl'       => $returnUrl,
-//                    'viewParameters'  => ['page' => $lastPage],
-//                    'contentTemplate' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::indexAction',
-//                    'passthroughVars' => [
-//                        'activeLink'    => '#mautic_company_index',
-//                        'mauticContent' => 'company',
-//                    ],
-//                ]
-//            );
-//        }
-//
-//        $pageHelper->rememberPage($page);
-//
-//        $tmpl  = $request->isXmlHttpRequest() ? $request->get('tmpl', 'index') : 'index';
-//        $model = $this->getModel('lead.company');
-//        \assert($model instanceof CompanyModel);
-//        $companyIds = array_keys($companies);
-//        $leadCounts = (!empty($companyIds)) ? $model->getRepository()->getLeadCount($companyIds) : [];
-//
-//        return $this->delegateView(
-//            [
-//                'viewParameters' => [
-//                    'searchValue' => $search,
-//                    'leadCounts'  => $leadCounts,
-//                    'items'       => $companies,
-//                    'page'        => $page,
-//                    'limit'       => $limit,
-//                    'permissions' => $permissions,
-//                    'tmpl'        => $tmpl,
-//                    'totalItems'  => $count,
-//                ],
-//                'contentTemplate' => '@LeuchtfeuerCompanyTags/Company/list.html.twig',
-//                'passthroughVars' => [
-//                    'activeLink'    => '#mautic_company_index',
-//                    'mauticContent' => 'company',
-//                    'route'         => $this->generateUrl('mautic_company_index', ['page' => $page]),
-//                ],
-//            ]
-//        );
-//    }
 
     /**
      * Generates edit form and processes post data.
@@ -397,8 +303,6 @@ class CompanyController extends CompanyControllerBase
                     // form is valid so process the data
                     $model->saveEntity($entity);
                     $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
-//                    $companyTags = $this->companyTagModel->getTagsByCompany($entity);
-//                    $companyTagsStructure['form'] = $this->formFactory->create(CustomCompanyType::class, $companyTags);
                     $this->addFlashMessage(
                         'mautic.core.notice.created',
                         [
@@ -486,7 +390,12 @@ class CompanyController extends CompanyControllerBase
         );
     }
 
-    public function viewAction(Request $request, $objectId)
+    /**
+     * @param Request $request
+     * @param $objectId
+     * @return RedirectResponse|JsonResponse|array|Response
+     */
+    public function viewAction(Request $request, $objectId): RedirectResponse|JsonResponse|array|Response
     {
         if (!$this->config->isPublished()) {
             return parent::viewAction($request, $objectId); // TODO: Change the autogenerated stub
@@ -553,12 +462,9 @@ class CompanyController extends CompanyControllerBase
         }
 
         $fields         = $company->getFields();
-        $companiesRepo  = $model->getCompanyLeadRepository();
-        $contacts       = $companiesRepo->getCompanyLeads($objectId);
+        $contacts       = $model->getCompanyLeadRepository()->getCompanyLeads($objectId);
 
         $leadIds = array_column($contacts, 'lead_id');
-
-        $engagementData = is_array($contacts) ? $this->getCompanyEngagementsForGraph($contacts) : [];
 
         $contacts = $this->getCompanyContacts($request, $objectId, 0, $leadIds);
 
@@ -570,7 +476,7 @@ class CompanyController extends CompanyControllerBase
                     'fields'            => $fields,
                     'items'             => $contacts['items'],
                     'permissions'       => $permissions,
-                    'engagementData'    => $engagementData,
+                    'engagementData'    => $this->getCompanyEngagementsForGraph($contacts),
                     'security'          => $this->security,
                     'page'              => $contacts['page'],
                     'totalItems'        => $contacts['count'],
@@ -580,28 +486,6 @@ class CompanyController extends CompanyControllerBase
             ]
         );
     }
-
-//    private function filterCompanyTagsChange(Company $entity)
-//    {
-//        $changes = $entity->getChanges();
-//
-//        if (!isset($changes['fields']['tags'][1])) {
-//            return $entity;
-//        }
-//        $tags = $changes['fields']['tags'][1];
-//        $newTags = [];
-//        foreach ($tags as $key=>$tag) {
-//            $newTags[$key]['id'] = $tag->getId();
-//            $newTags[$key]['tag'] = $tag->getTag();
-//        }
-//        $changes['fields']['tags'] = [
-//            0 => $changes['fields']['tags'][0],
-//            1 => $newTags
-//        ];
-//        $entity->setChanges($changes);
-//
-//        return $entity;
-//    }
 
     private function customFormCompanyTags(Request $request, $objectAction, Company $company)
     {

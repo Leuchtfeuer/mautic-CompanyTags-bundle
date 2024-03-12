@@ -18,6 +18,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
 {
@@ -39,15 +42,12 @@ class CompanyTagController extends AbstractStandardFormController
     ) {
         parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
         if (!$this->config->isPublished()) {
-            throw new \Exception('The plugin is not published');
+            throw new \RuntimeException('The plugin is not published');
         }
     }
 
-    public function indexAction(Request $request, $page = 1)
+    public function indexAction(Request $request, $page = 1): RedirectResponse|JsonResponse|array|Response
     {
-//        if (!$this->config->isPublished()) {
-//            return parent::indexStandard($request, $page);
-//        }
         // set some permissions
         $permissions = $this->security->isGranted(
             [
@@ -176,19 +176,25 @@ class CompanyTagController extends AbstractStandardFormController
         );
     }
 
-    public function newAction(Request $request)
+    /**
+     * @throws \Exception
+     */
+    public function newAction(Request $request): RedirectResponse|JsonResponse|array|Response
     {
-        return parent::newStandard($request);
+        return $this->newStandard($request);
     }
 
-    public function editAction(Request $request, $objectId, $ignorePost = false)
+    /**
+     * @throws \Exception
+     */
+    public function editAction(Request $request, $objectId, $ignorePost = false): RedirectResponse|JsonResponse|Response
     {
-        return parent::editStandard($request, $objectId, $ignorePost);
+        return $this->editStandard($request, $objectId, $ignorePost);
     }
 
-    public function deleteAction(Request $request, $objectId)
+    public function deleteAction(Request $request, $objectId): RedirectResponse|JsonResponse
     {
-        return parent::deleteStandard($request, $objectId);
+        return $this->deleteStandard($request, $objectId);
     }
 
     protected function getModelName(): string
@@ -201,7 +207,7 @@ class CompanyTagController extends AbstractStandardFormController
      *
      * @return string
      */
-    protected function getDefaultOrderColumn()
+    protected function getDefaultOrderColumn(): string
     {
         return 'tag';
     }
@@ -211,12 +217,12 @@ class CompanyTagController extends AbstractStandardFormController
      *
      * @return string
      */
-    protected function getTemplateBase()
+    protected function getTemplateBase(): string
     {
         return '@LeuchtfeuerCompanyTags/CompanyTag';
     }
 
-    public function viewAction(Request $request, $objectId)
+    public function viewAction(Request $request, $objectId): RedirectResponse|JsonResponse|array|Response
     {
         $security = $this->security;
         $tag      = $this->companyTagModel->getEntity($objectId);
