@@ -10,14 +10,20 @@ class CompanyTagPermissions extends AbstractPermissions
     public function __construct($params)
     {
         parent::__construct($params);
-        $this->addStandardPermissions('companytags');
+        $this->addStandardPermissions(['companytags']);
     }
 
-    public function getName()
+    public function getName(): string
     {
         return 'companytag';
     }
 
+    /**
+     * @param FormBuilderInterface $builder
+     * @param array<mixed> $options
+     * @param array<mixed> $data
+     * @return void
+     */
     public function buildForm(FormBuilderInterface &$builder, array $options, array $data): void
     {
         $this->addExtendedFormFields('companytag', 'companytags', $builder, $data);

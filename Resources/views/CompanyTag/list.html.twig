@@ -60,7 +60,7 @@
                                 '@MauticCore/Helper/tableheader.html.twig',
                                 {
                                     'sessionVar' : 'tags',
-                                    'text'       : 'mautic.lead.list.thead.leadcount',
+                                    'text'       : 'mautic.companytag.list.thead.companycount',
                                     'class'      : 'visible-md visible-lg col-tag-leadcount',
                                 }
                             ) }}
@@ -122,11 +122,12 @@
                                     {% endif %}
                                 </td>
                                 <td class="visible-md visible-lg">
-{#                                    <a class="label label-primary" href="{{-  path('mautic_contact_index', {#}
-{#                                        'search' : "#{'mautic.companytag.lead.searchcommand.list'|trans}:\"#{item.getTag()}\"",#}
-{#                                    }) -}}" data-toggle="ajax" {{- 0 == tagsCount[item.getId()] ? 'disabled=disabled' : '' -}}>#}
-{#                                    {{- 'mautic.lead.list.viewleads_count'|trans({'%count%': tagsCount[item.getId()]}) -}}#}
-{#                                    </a>#}
+                                    <a class="label label-primary" href="{{-  path('mautic_company_index', {
+                                        'search' : "#{'mautic.companytag.company.searchcommand.list'|trans}:\"#{item.getTag()}\"",
+                                    }) -}}" data-toggle="ajax" {{- 0 == tagsCount[item.getId()] ? 'disabled=disabled' : '' -}}>
+                                    {{- 'mautic.companytag.list.viewcompanies_count'|trans({'%count%': tagsCount[item.getId()]}) -}}
+                                    </a>
+
                                 </td>
                                 <td class="visible-md visible-lg">{{ item.getId() }}</td>
                             </tr>

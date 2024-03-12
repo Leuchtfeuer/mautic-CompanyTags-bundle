@@ -15,7 +15,7 @@ class CompanyTagsRepository extends CommonRepository
         }
         $companyTag = new CompanyTags($name, true);
 
-        /** @var Tag|null $existingTag */
+        /** @var CompanyTags|null $existingTag */
         $existingTag = $this->findOneBy(
             [
                 'tag' => $companyTag->getTag(),
@@ -36,5 +36,45 @@ class CompanyTagsRepository extends CommonRepository
             ->getQuery();
 
         return $query->getResult();
+    }
+
+    /**
+     * Get a count of leads that belong to the tag.
+     *
+     * @return array<int, int>|int
+     */
+    public function countByLeads(array|int $tagIds): int|array
+    {
+        $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
+
+        $q->select('count(ctx.company_id) as thecount, ctx.tag_id')
+            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
+
+        $returnArray = is_array($tagIds);
+
+        if (!$returnArray) {
+            $tagIds = [$tagIds];
+        }
+
+        $q->where(
+            $q->expr()->in('ctx.tag_id', $tagIds)
+        )
+            ->groupBy('ctx.tag_id');
+
+        $result = $q->executeQuery()->fetchAllAssociative();
+
+        $return = [];
+        foreach ($result as $r) {
+            $return[$r['tag_id']] = $r['thecount'];
+        }
+
+        // Ensure lists without leads have a value
+        foreach ($tagIds as $l) {
+            if (!isset($return[$l])) {
+                $return[$l] = 0;
+            }
+        }
+
+        return ($returnArray) ? $return : $return[$tagIds[0]];
     }
 }

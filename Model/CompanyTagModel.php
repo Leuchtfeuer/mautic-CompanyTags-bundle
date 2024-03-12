@@ -12,9 +12,9 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 class CompanyTagModel extends FormModel
 {
     /**
-     * @return CompanyTagsRepository
+     * @return \Doctrine\ORM\EntityRepository|\MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
      */
-    public function getRepository()
+    public function getRepository(): \Doctrine\ORM\EntityRepository|\MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
     {
         return $this->em->getRepository(CompanyTags::class);
     }
@@ -44,7 +44,7 @@ class CompanyTagModel extends FormModel
      * @param object                              $entity
      * @param \Symfony\Component\Form\FormFactory $formFactory
      * @param null                                $action
-     * @param array                               $options
+     * @param array<mixed>                               $options
      *
      * @throws NotFoundHttpException
      */
@@ -61,19 +61,24 @@ class CompanyTagModel extends FormModel
         return $formFactory->create(CompanyTagEntityType::class, $entity, $options);
     }
 
-    public function addCompanyTag(Company $company, CompanyTags $companyTags)
+    public function addCompanyTag(Company $company, CompanyTags $companyTags): void
     {
         $companyTags->addCompany($company);
         $this->saveEntity($companyTags);
     }
 
-    public function removeCompanyTag(Company $company, CompanyTags $companyTags)
+    public function removeCompanyTag(Company $company, CompanyTags $companyTags): void
     {
         $companyTags->removeCompany($company);
         $this->saveEntity($companyTags);
     }
 
-    public function updateCompanyTags(Company $company, array $addCompanyTags, array $removeCompanyTags= [])
+    /**
+     * @param Company $company
+     * @param array<CompanyTags>   $addCompanyTags
+     * @param array<CompanyTags>   $removeCompanyTags
+     */
+    public function updateCompanyTags(Company $company, array $addCompanyTags = [], array $removeCompanyTags= []): void
     {
         if (empty($addCompanyTags) && empty($removeCompanyTags)) {
             return;
@@ -91,7 +96,12 @@ class CompanyTagModel extends FormModel
         }
     }
 
-    public function getTagsByCompany(Company $company)
+    /**
+     * @param Company $company
+     * @return array<CompanyTags>
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function getTagsByCompany(Company $company): array
     {
         $qb = $this->em->getConnection()->createQueryBuilder();
 

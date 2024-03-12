@@ -18,6 +18,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
 {
@@ -39,23 +42,167 @@ class CompanyTagController extends AbstractStandardFormController
     ) {
         parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
         if (!$this->config->isPublished()) {
-            throw new \Exception('The plugin is not published');
+            throw new \RuntimeException('The plugin is not published');
         }
     }
 
-    public function indexAction(Request $request, $page = 1)
+    /**
+     * @param Request $request
+     * @param int $page
+     * @return RedirectResponse|JsonResponse|array<mixed>|Response
+     * @throws \Exception
+     */
+    public function indexAction(Request $request, int $page = 1): RedirectResponse|JsonResponse|array|Response
     {
-        return parent::indexStandard($request, $page);
+        // set some permissions
+        $permissions = $this->security->isGranted(
+            [
+                $this->getPermissionBase().':view',
+                $this->getPermissionBase().':viewown',
+                $this->getPermissionBase().':viewother',
+                $this->getPermissionBase().':create',
+                $this->getPermissionBase().':edit',
+                $this->getPermissionBase().':editown',
+                $this->getPermissionBase().':editother',
+                $this->getPermissionBase().':delete',
+                $this->getPermissionBase().':deleteown',
+                $this->getPermissionBase().':deleteother',
+                $this->getPermissionBase().':publish',
+                $this->getPermissionBase().':publishown',
+                $this->getPermissionBase().':publishother',
+            ],
+            'RETURN_ARRAY',
+            null,
+            true
+        );
+
+        if (!$this->checkActionPermission('index')) {
+            return $this->accessDenied();
+        }
+
+        $this->setListFilters();
+
+        $session = $request->getSession();
+        if (empty($page)) {
+            $page = $session->get('mautic.'.$this->getSessionBase().'.page', 1);
+        }
+
+        // set limits
+        $limit = $session->get('mautic.'.$this->getSessionBase().'.limit', $this->coreParametersHelper->get('default_pagelimit'));
+        $start = (1 === $page) ? 0 : (($page - 1) * $limit);
+        if ($start < 0) {
+            $start = 0;
+        }
+
+        $search = $request->get('search', $session->get('mautic.'.$this->getSessionBase().'.filter', ''));
+        $session->set('mautic.'.$this->getSessionBase().'.filter', $search);
+        $model  = $this->getModel($this->getModelName());
+        $repo   = $model->getRepository();
+        $filter = ['string' => $search, 'force' => []];
+
+        if (!empty($search)) {
+            $filter = [
+                'where' => [
+                    [
+                        'expr' => 'like',
+                        'col'  => $repo->getTableAlias().'.tag',
+                        'val'  => '%'.$search.'%',
+                    ],
+                ],
+            ];
+        }
+
+        if (!$permissions[$this->getPermissionBase().':viewother']) {
+            $filter['force'][] = ['column' => $repo->getTableAlias().'.createdBy', 'expr' => 'eq', 'value' => $this->user->getId()];
+        }
+
+        $orderBy    = $session->get('mautic.'.$this->getSessionBase().'.orderby', $repo->getTableAlias().'.'.$this->getDefaultOrderColumn());
+        $orderByDir = $session->get('mautic.'.$this->getSessionBase().'.orderbydir', $this->getDefaultOrderDirection());
+
+        [$count, $items] = $this->getIndexItems($start, $limit, $filter, $orderBy, $orderByDir);
+
+        if ($count && $count < ($start + 1)) {
+            // the number of entities are now less then the current page so redirect to the last page
+            $lastPage = (1 === $count) ? 1 : (((ceil($count / $limit)) ?: 1) ?: 1);
+
+            $session->set('mautic.'.$this->getSessionBase().'.page', $lastPage);
+            $returnUrl = $this->generateUrl($this->getIndexRoute(), ['page' => $lastPage]);
+
+            return $this->postActionRedirect(
+                $this->getPostActionRedirectArguments(
+                    [
+                        'returnUrl'       => $returnUrl,
+                        'viewParameters'  => ['page' => $lastPage],
+                        'contentTemplate' => $this->getControllerBase().'::'.$this->getPostActionControllerAction('index').'Action',
+                        'passthroughVars' => [
+                            'mauticContent' => $this->getJsLoadMethodPrefix(),
+                        ],
+                    ],
+                    'index'
+                )
+            );
+        }
+
+        // set what page currently on so that we can return here after form submission/cancellation
+        $session->set('mautic.'.$this->getSessionBase().'.page', $page);
+        $tagIds    = array_keys(iterator_to_array($items->getIterator(), true));
+
+        $tagsCount      = (!empty($tagIds)) ? $this->companyTagModel->getRepository()->countByLeads($tagIds) : [];
+        $viewParameters = [
+            'permissionBase'  => $this->getPermissionBase(),
+            'mauticContent'   => $this->getJsLoadMethodPrefix(),
+            'sessionVar'      => $this->getSessionBase(),
+            'actionRoute'     => $this->getActionRoute(),
+            'indexRoute'      => $this->getIndexRoute(),
+            'tablePrefix'     => $model->getRepository()->getTableAlias(),
+            'modelName'       => $this->getModelName(),
+            'translationBase' => $this->getTranslationBase(),
+            'searchValue'     => $search,
+            'items'           => $items,
+            'totalItems'      => $count,
+            'page'            => $page,
+            'limit'           => $limit,
+            'permissions'     => $permissions,
+            'tmpl'            => $request->get('tmpl', 'index'),
+            'tagsCount'       => $tagsCount,
+        ];
+
+        return $this->delegateView(
+            $this->getViewArguments(
+                [
+                    'viewParameters'  => $viewParameters,
+                    'contentTemplate' => $this->getTemplateName('list.html.twig'),
+                    'passthroughVars' => [
+                        'mauticContent' => $this->getJsLoadMethodPrefix(),
+                        'route'         => $this->generateUrl($this->getIndexRoute(), ['page' => $page]),
+                    ],
+                ],
+                'index'
+            )
+        );
     }
 
-    public function newAction(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse|JsonResponse|Response
+     * @throws \Exception
+     */
+    public function newAction(Request $request): RedirectResponse|JsonResponse|Response
     {
-        return parent::newStandard($request);
+        return $this->newStandard($request);
     }
 
-    public function editAction(Request $request, $objectId, $ignorePost = false)
+    /**
+     * @throws \Exception
+     */
+    public function editAction(Request $request, int $objectId, bool $ignorePost = false): RedirectResponse|JsonResponse|Response
     {
-        return parent::editStandard($request, $objectId, $ignorePost);
+        return $this->editStandard($request, $objectId, $ignorePost);
+    }
+
+    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse
+    {
+        return $this->deleteStandard($request, $objectId);
     }
 
     protected function getModelName(): string
@@ -68,7 +215,7 @@ class CompanyTagController extends AbstractStandardFormController
      *
      * @return string
      */
-    protected function getDefaultOrderColumn()
+    protected function getDefaultOrderColumn(): string
     {
         return 'tag';
     }
@@ -78,12 +225,17 @@ class CompanyTagController extends AbstractStandardFormController
      *
      * @return string
      */
-    protected function getTemplateBase()
+    protected function getTemplateBase(): string
     {
         return '@LeuchtfeuerCompanyTags/CompanyTag';
     }
 
-    public function viewAction(Request $request, $objectId)
+    /**
+     * @param Request $request
+     * @param int $objectId
+     * @return RedirectResponse|JsonResponse|array<mixed>|Response
+     */
+    public function viewAction(Request $request, int $objectId): RedirectResponse|JsonResponse|array|Response
     {
         $security = $this->security;
         $tag      = $this->companyTagModel->getEntity($objectId);

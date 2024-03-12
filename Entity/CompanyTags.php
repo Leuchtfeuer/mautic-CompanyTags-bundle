@@ -14,11 +14,11 @@ use Symfony\Component\Validator\Mapping\ClassMetadata as ValidatorClassMetadata;
 // class CompanyTags extends CommonEntity
 class CompanyTags
 {
-    private $id;
-    private $tag;
+    private ?int $id;
+    private ?string $tag;
     private $companies;
 
-    private $description;
+    private ?string $description;
 
     public function __construct(string $tag = null, bool $clean = true)
     {
@@ -26,7 +26,7 @@ class CompanyTags
         $this->companies      = new ArrayCollection();
     }
 
-    public static function loadMetadata(ClassMetadata $metadata)
+    public static function loadMetadata(ClassMetadata $metadata): void
     {
         $builder = new ClassMetadataBuilder($metadata);
         $builder->setTable('company_tags')
@@ -48,7 +48,7 @@ class CompanyTags
             ->build();
     }
 
-    public static function loadValidatorMetadata(ValidatorClassMetadata $metadata)
+    public static function loadValidatorMetadata(ValidatorClassMetadata $metadata): void
     {
         $metadata->addPropertyConstraint(
             'tag',
@@ -82,30 +82,28 @@ class CompanyTags
             ->build();
     }
 
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function getTag()
+    public function getTag(): ?string
     {
         return $this->tag;
     }
 
-    public function setTag($tag)
+    public function setTag(string $tag): void
     {
-//        $this->isChanged('tag', $tag);
         $this->tag = $this->validateTag($tag);
     }
 
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    public function setDescription($description)
+    public function setDescription(string $description): void
     {
-//        $this->isChanged('description', $description);
         $this->description = $description;
     }
 
@@ -114,29 +112,29 @@ class CompanyTags
         return InputHelper::string(trim((string) $tag));
     }
 
-    public function getName()
+    public function getName(): ?string
     {
         return $this->tag;
     }
 
-    public function getPermissionUser()
+    public function getPermissionUser(): int
     {
         return 0;
     }
 
-    public function addCompany(Company $company)
+    public function addCompany(Company $company): void
     {
         if (!$this->companies->contains($company)) {
             $this->companies->add($company);
         }
     }
 
-    public function removeCompany(Company $company)
+    public function removeCompany(Company $company): void
     {
         $this->companies->removeElement($company);
     }
 
-    public function getCompanies()
+    public function getCompanies(): ArrayCollection
     {
         return $this->companies;
     }
