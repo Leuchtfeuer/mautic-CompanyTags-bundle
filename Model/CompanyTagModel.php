@@ -11,9 +11,6 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 class CompanyTagModel extends FormModel
 {
-    /**
-     * @return \Doctrine\ORM\EntityRepository|\MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
-     */
     public function getRepository(): \Doctrine\ORM\EntityRepository|\MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
     {
         return $this->em->getRepository(CompanyTags::class);
@@ -44,7 +41,7 @@ class CompanyTagModel extends FormModel
      * @param object                              $entity
      * @param \Symfony\Component\Form\FormFactory $formFactory
      * @param null                                $action
-     * @param array<mixed>                               $options
+     * @param array<mixed>                        $options
      *
      * @throws NotFoundHttpException
      */
@@ -74,9 +71,8 @@ class CompanyTagModel extends FormModel
     }
 
     /**
-     * @param Company $company
-     * @param array<CompanyTags>   $addCompanyTags
-     * @param array<CompanyTags>   $removeCompanyTags
+     * @param array<CompanyTags> $addCompanyTags
+     * @param array<CompanyTags> $removeCompanyTags
      */
     public function updateCompanyTags(Company $company, array $addCompanyTags = [], array $removeCompanyTags= []): void
     {
@@ -97,8 +93,8 @@ class CompanyTagModel extends FormModel
     }
 
     /**
-     * @param Company $company
      * @return array<CompanyTags>
+     *
      * @throws \Doctrine\DBAL\Exception
      */
     public function getTagsByCompany(Company $company): array

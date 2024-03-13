@@ -19,10 +19,8 @@ class CompanyTagPermissions extends AbstractPermissions
     }
 
     /**
-     * @param FormBuilderInterface $builder
      * @param array<mixed> $options
      * @param array<mixed> $data
-     * @return void
      */
     public function buildForm(FormBuilderInterface &$builder, array $options, array $data): void
     {

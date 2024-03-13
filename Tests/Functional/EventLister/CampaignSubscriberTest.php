@@ -278,7 +278,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $this->testSymfonyCommand('mautic:campaigns:trigger', ['-i' => $campaign->getId()]);
 
         $tags = $companyTagModel->getRepository()->getTagsByCompany($company);
-        $this->assertCount(2,$tags);
+        $this->assertCount(2, $tags);
         $included = [
             'CompanyTag3',
             'CompanyTag4',

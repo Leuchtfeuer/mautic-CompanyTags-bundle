@@ -102,6 +102,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
 
     /**
      * @return array<CompanyTags>
+     *
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
