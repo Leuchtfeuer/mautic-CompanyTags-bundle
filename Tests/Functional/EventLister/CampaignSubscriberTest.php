@@ -204,7 +204,6 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
          * ADD Tags to Company
          * ADD Company to Lead.
          */
-//        $companyTagModel->updateCompanyTags($company, [$companyTags1, $companyTags2]);
         $lead->setCompany($company);
         $this->em->persist($lead);
         $this->em->flush();

@@ -20,7 +20,6 @@ class CompanyTagEntityType extends AbstractType
     {
         $builder->add('buttons', FormButtonsType::class);
         $builder->addEventSubscriber(new CleanFormSubscriber(['description' => 'strict_html']));
-//        dump($options['data']->getDescription());
         // We only allow to set tag field value if we are creating new tag.
         $tagReadOnly = !empty($options['data']) && $options['data']->getId() ? true : false;
 

@@ -84,8 +84,6 @@ class CompanyController extends CompanyControllerBase
             ],
         ];
 
-//        dump('bbbb');
-
         // form not found
         if (null === $entity) {
             return $this->postActionRedirect(
@@ -130,7 +128,6 @@ class CompanyController extends CompanyControllerBase
         );
         $companyTagsStructure = $this->customFormCompanyTags($request, 'edit', $entity);
 
-//        dump($companyTagsStructure['form']);
         // /Check for a submitted form and process it
         if (!$ignorePost && 'POST' === $method) {
             $valid = false;

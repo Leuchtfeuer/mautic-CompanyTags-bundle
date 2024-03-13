@@ -21,7 +21,6 @@ class ModifyCompanyTagsType extends AbstractType
     {
         $builder->add(
             'add_tags',
-//            TagType::class,
             CompanyTagType::class,
             [
                 'label' => 'mautic.companytag.companytags.add',
@@ -38,7 +37,6 @@ class ModifyCompanyTagsType extends AbstractType
 
         $builder->add(
             'remove_tags',
-//            TagType::class,
             CompanyTagType::class,
             [
                 'label' => 'mautic.companytag.companytags.remove',
