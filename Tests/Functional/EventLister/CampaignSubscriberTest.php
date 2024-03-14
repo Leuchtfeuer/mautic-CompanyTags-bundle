@@ -204,7 +204,6 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
          * ADD Tags to Company
          * ADD Company to Lead.
          */
-//        $companyTagModel->updateCompanyTags($company, [$companyTags1, $companyTags2]);
         $lead->setCompany($company);
         $this->em->persist($lead);
         $this->em->flush();
@@ -278,7 +277,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $this->testSymfonyCommand('mautic:campaigns:trigger', ['-i' => $campaign->getId()]);
 
         $tags = $companyTagModel->getRepository()->getTagsByCompany($company);
-        $this->assertCount(2,$tags);
+        $this->assertCount(2, $tags);
         $included = [
             'CompanyTag3',
             'CompanyTag4',

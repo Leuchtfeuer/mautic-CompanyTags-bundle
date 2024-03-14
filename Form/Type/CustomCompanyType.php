@@ -39,8 +39,4 @@ class CustomCompanyType extends AbstractType
         );
     }
 
-//    public static function getExtendedTypes(): iterable
-//    {
-//        return [CompanyType::class];
-//    }
 }

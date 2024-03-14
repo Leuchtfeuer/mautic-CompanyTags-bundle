@@ -37,7 +37,7 @@ return [
                 'route'     => 'mautic_companytag_index',
                 'iconClass' => 'fa-tags',
                 'access'    => 'companytag:companytags:view',
-                'priority'  => 50,
+                'priority'  => 1,
                 'checks'    => [
                     'integration' => [
                         'LeuchtfeuerCompanyTags' => [

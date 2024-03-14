@@ -14,7 +14,7 @@ use Symfony\Component\Validator\Mapping\ClassMetadata as ValidatorClassMetadata;
 // class CompanyTags extends CommonEntity
 class CompanyTags
 {
-    private ?int $id;
+    private $id;
     private ?string $tag;
     private $companies;
 
@@ -82,7 +82,7 @@ class CompanyTags
             ->build();
     }
 
-    public function getId(): int
+    public function getId()
     {
         return $this->id;
     }

@@ -16,10 +16,10 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
@@ -47,9 +47,8 @@ class CompanyTagController extends AbstractStandardFormController
     }
 
     /**
-     * @param Request $request
-     * @param int $page
      * @return RedirectResponse|JsonResponse|array<mixed>|Response
+     *
      * @throws \Exception
      */
     public function indexAction(Request $request, int $page = 1): RedirectResponse|JsonResponse|array|Response
@@ -183,8 +182,6 @@ class CompanyTagController extends AbstractStandardFormController
     }
 
     /**
-     * @param Request $request
-     * @return RedirectResponse|JsonResponse|Response
      * @throws \Exception
      */
     public function newAction(Request $request): RedirectResponse|JsonResponse|Response
@@ -212,8 +209,6 @@ class CompanyTagController extends AbstractStandardFormController
 
     /**
      * Provide the name of the column which is used for default ordering.
-     *
-     * @return string
      */
     protected function getDefaultOrderColumn(): string
     {
@@ -222,8 +217,6 @@ class CompanyTagController extends AbstractStandardFormController
 
     /**
      * Get template base different than @MauticCore/Standard.
-     *
-     * @return string
      */
     protected function getTemplateBase(): string
     {
@@ -231,8 +224,6 @@ class CompanyTagController extends AbstractStandardFormController
     }
 
     /**
-     * @param Request $request
-     * @param int $objectId
      * @return RedirectResponse|JsonResponse|array<mixed>|Response
      */
     public function viewAction(Request $request, int $objectId): RedirectResponse|JsonResponse|array|Response
