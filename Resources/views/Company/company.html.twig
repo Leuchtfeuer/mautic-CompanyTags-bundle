@@ -21,6 +21,11 @@
 {% set canDownload = securityHasEntityAccess(permissions['lead:leads:viewown'], permissions['lead:leads:viewother'], company.permissionUser) %}
 {% set buttons     = [] %}
 
+<script type="text/javascript">
+    if (typeof Mautic.createCompanyTag === 'undefined') {
+        Mautic.loadScript('{{ asset('plugins/LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js') }}');
+    }
+</script>
 {# Merge button #}
 {% if canMerge and canEdit %}
     {% set buttons = buttons|merge([{
