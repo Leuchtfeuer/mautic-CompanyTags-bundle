@@ -106,22 +106,23 @@ class CompanyControllerTest extends MauticMysqlTestCase
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    private function addCompanyTags(): array
+    private function addCompanyTags(array $tags = []): array
     {
-        $companyTag1 = new CompanyTags();
-        $companyTag1->setTag(self::TAG_ONE);
-        $companyTag1->setDescription('Description tag 1');
-        $this->em->persist($companyTag1);
-        $this->em->flush();
-        $companyTag2 = new CompanyTags();
-        $companyTag2->setTag(self::TAG_TWO);
-        $this->em->persist($companyTag2);
-        $this->em->flush();
+        if (empty($tags)) {
+            $tags = [self::TAG_ONE, self::TAG_TWO];
+        }
 
-        return [
-            $companyTag1,
-            $companyTag2,
-        ];
+        foreach ($tags as $tag) {
+            $companyTag = new CompanyTags();
+            $companyTag->setTag($tag);
+            $companyTag->setDescription('Description '.$tag);
+            $this->em->persist($companyTag);
+            $this->em->flush();
+            $result[] = $companyTag;
+        }
+
+
+        return $result;
     }
 
     private function activePlugin(bool $isPublished = true): void
@@ -139,5 +140,80 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->em->getRepository(Integration::class)->saveEntity($integration);
         $this->em->persist($integration);
         $this->em->flush();
+    }
+
+    public function testResearchBySameTagInTwoCompanies()
+    {
+        $tags                                = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
+        // Set one Company with two tags
+        $this->registerCompany('Test Company View List', 'test@test.com', [$tags[0]->getId(), $tags[1]->getId()]);
+        $this->assertStringContainsString('Edit Company Test Company View List', $this->client->getResponse()->getContent());
+        // Set one Company with one other tag already set
+        $this->registerCompany('Fee Lee Company', 'test1@test.com', [$tags[0]->getId()]);
+        $this->assertStringContainsString('Edit Company Fee Lee Company', $this->client->getResponse()->getContent());
+
+        // Set one Company with no tags
+        $this->registerCompany('Dee Gee Company', 'test1@test.com');
+        $this->assertStringContainsString('Edit Company Dee Gee Company', $this->client->getResponse()->getContent());
+
+        // Search for tree companies listed
+        $crawler  = $this->client->request('GET', '/s/companies');
+        $this->assertResponseStatusCodeSame(200);
+        $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
+        $this->assertSame(4, $numberOfTrInCompanyListTable);
+
+        // Search for one company listed by tag
+        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"tagTest1"');
+        $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
+        $this->assertSame(3, $numberOfTrInCompanyListTable);
+        $this->assertStringContainsString('Test Company View List', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Fee Lee Company', $this->client->getResponse()->getContent());
+    }
+
+    public function testResearchBySameTagInOneCompany()
+    {
+        $tags = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
+        // Set one Company with one other tags
+        $this->registerCompany('Foo Baa Company', 'test1@test.com', [$tags[2]->getId()]);
+        $this->assertStringContainsString('Edit Company Foo Baa Company', $this->client->getResponse()->getContent());
+        // Set one Company with no tags
+        $this->registerCompany('Dee Gee Company', 'test1@test.com');
+        $this->assertStringContainsString('Edit Company Dee Gee Company', $this->client->getResponse()->getContent());
+        // Search for tree companies listed
+        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"tagTest3"');
+        $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
+        $this->assertSame(2, $numberOfTrInCompanyListTable);
+        $this->assertStringContainsString('Foo Baa Company', $this->client->getResponse()->getContent());
+    }
+
+    public function testResearchByNameDontExist()
+    {
+        $tags = $this->addCompanyTags(['tagTest1']);
+        // Set one Company with one other tags
+        $this->registerCompany('Foo Baa Company', 'test1@test.com', [$tags[0]->getId()]);
+        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"foobaa"');
+        $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
+        $this->assertSame(0, $numberOfTrInCompanyListTable);
+    }
+
+    private function registerCompany($companyName, $companyEmail, $tags=[])
+    {
+        $crawler                             = $this->client->request('GET', '/s/companies/new');
+        $form                                = $crawler->filter('form[name=company]')->form();
+        $formValues                          = $form->getValues();
+        $formValues['company[companyname]']  = $companyName;
+        $formValues['company[companyemail]'] = $companyEmail;
+        if (!empty($tags)){
+            $formValues['custom_company[tag]']   = $tags;
+        }
+        $form->setValues($formValues);
+        $this->client->submit($form);
+        $this->assertResponseStatusCodeSame(200);
+    }
+
+    public function testIfJsonIsReturned()
+    {
+        $this->registerCompany('Dee Gee Company', 'test2@test.com');
+        $this->assertStringContainsString('LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js', $this->client->getResponse()->getContent());
     }
 }
