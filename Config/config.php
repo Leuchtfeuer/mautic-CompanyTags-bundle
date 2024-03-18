@@ -58,6 +58,10 @@ return [
                 'path'       => '/companytag/{objectAction}/{objectId}',
                 'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController:executeAction',
             ],
+            'mautic_company_index' => [
+                'path'       => '/companies/{page}',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::indexAction',
+            ],
             'mautic_company_action' => [
                 'path'       => '/companies/{objectAction}/{objectId}',
                 'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::executeAction',

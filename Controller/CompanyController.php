@@ -5,6 +5,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller;
 use Doctrine\Persistence\ManagerRegistry;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
+use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\UserHelper;
@@ -46,6 +47,144 @@ class CompanyController extends CompanyControllerBase
         private Config $config,
     ) {
         parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
+    }
+
+    /**
+     * @param Request $request
+     * @param PageHelperFactoryInterface $pageHelperFactory
+     * @param int $page
+     *
+     * @return JsonResponse|RedirectResponse|Response
+     */
+    public function indexAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $page = 1): RedirectResponse|JsonResponse|Response
+    {
+        if (!$this->config->isPublished()) {
+            return parent::indexAction($request, $pageHelperFactory, $page);
+        }
+
+        // set some permissions
+        $permissions = $this->security->isGranted(
+            [
+                'lead:leads:viewown',
+                'lead:leads:viewother',
+                'lead:leads:create',
+                'lead:leads:editother',
+                'lead:leads:editown',
+                'lead:leads:deleteown',
+                'lead:leads:deleteother',
+            ],
+            'RETURN_ARRAY'
+        );
+
+        if (!$permissions['lead:leads:viewother'] && !$permissions['lead:leads:viewown']) {
+            return $this->accessDenied();
+        }
+
+        $this->setListFilters();
+
+        $pageHelper = $pageHelperFactory->make('mautic.company', $page);
+
+        $limit      = $pageHelper->getLimit();
+        $start      = $pageHelper->getStart();
+        $search     = $request->get('search', $request->getSession()->get('mautic.company.filter', ''));
+        $filter     = $this->filterByCompanyTag($search);
+        $orderBy    = $request->getSession()->get('mautic.company.orderby', 'comp.companyname');
+        $orderByDir = $request->getSession()->get('mautic.company.orderbydir', 'ASC');
+        $companies = $this->getModel('lead.company')->getEntities(
+            [
+                'start'          => $start,
+                'limit'          => $limit,
+                'filter'         => $filter,
+                'orderBy'        => $orderBy,
+                'orderByDir'     => $orderByDir,
+                'withTotalCount' => true,
+            ]
+        );
+
+        $request->getSession()->set('mautic.company.filter', $search);
+
+        $count     = $companies['count'];
+        $companies = $companies['results'];
+
+        if ($count && $count < ($start + 1)) {
+            $lastPage  = $pageHelper->countPage($count);
+            $returnUrl = $this->generateUrl('mautic_company_index', ['page' => $lastPage]);
+            $pageHelper->rememberPage($lastPage);
+
+            return $this->postActionRedirect(
+                [
+                    'returnUrl'       => $returnUrl,
+                    'viewParameters'  => ['page' => $lastPage],
+                    'contentTemplate' => 'Mautic\LeadBundle\Controller\CompanyController::indexAction',
+                    'passthroughVars' => [
+                        'activeLink'    => '#mautic_company_index',
+                        'mauticContent' => 'company',
+                    ],
+                ]
+            );
+        }
+
+        $pageHelper->rememberPage($page);
+
+        $tmpl  = $request->isXmlHttpRequest() ? $request->get('tmpl', 'index') : 'index';
+        $model = $this->getModel('lead.company');
+        \assert($model instanceof CompanyModel);
+        $companyIds = array_keys($companies);
+        $leadCounts = (!empty($companyIds)) ? $model->getRepository()->getLeadCount($companyIds) : [];
+
+        return $this->delegateView(
+            [
+                'viewParameters' => [
+                    'searchValue' => $search,
+                    'leadCounts'  => $leadCounts,
+                    'items'       => $companies,
+                    'page'        => $page,
+                    'limit'       => $limit,
+                    'permissions' => $permissions,
+                    'tmpl'        => $tmpl,
+                    'totalItems'  => $count,
+                ],
+                'contentTemplate' => '@MauticLead/Company/list.html.twig',
+                'passthroughVars' => [
+                    'activeLink'    => '#mautic_company_index',
+                    'mauticContent' => 'company',
+                    'route'         => $this->generateUrl('mautic_company_index', ['page' => $page]),
+                ],
+            ]
+        );
+    }
+
+    /**
+     * @param $search
+     * @return array<mixed>
+     */
+    private function filterByCompanyTag($search): array
+    {
+        // tag:"bola"
+        $defaultFilter = ['string' => $search, 'force' => []];
+        if(!str_contains($search, 'tag:')) {
+            return $defaultFilter;
+        }
+        $tag = str_replace('tag:', '', $search);
+        $tag = str_replace('"', '', $tag);
+        $tag = $this->companyTagModel->getRepository()->findOneBy(['tag' => $tag]);
+        if(!$tag) {
+            return $defaultFilter;
+        }
+        $companies = $tag->getCompanies()->toArray();
+
+        $companyIds = array_map(function($company) {
+            return $company->getId();
+        }, $companies);
+        return [
+            'force' => [
+                [
+                    'column' => 'comp.id',
+                    'expr'   => 'in',
+                    'value'  => $companyIds,
+                ],
+            ],
+        ];
     }
 
     /**
