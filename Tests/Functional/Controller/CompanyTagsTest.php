@@ -48,7 +48,7 @@ class CompanyTagsTest extends MauticMysqlTestCase
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString('Test Tag', $this->client->getResponse()->getContent());
         $companyTag = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => 'Test Tag 222'], ['id' => 'DESC']);
-        $this->client->request('POST', '/s/companytag/delete/' . $companyTag->getId());
+        $this->client->request('POST', '/s/companytag/delete/'.$companyTag->getId());
         $this->assertResponseStatusCodeSame(200);
         $companyTag = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => 'Test Tag 222'], ['id' => 'DESC']);
         $this->assertEmpty($companyTag);
@@ -66,21 +66,19 @@ class CompanyTagsTest extends MauticMysqlTestCase
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString('Test Tag 33', $this->client->getResponse()->getContent());
         $companyTag = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => 'Test Tag 33'], ['id' => 'DESC']);
-        $crawler    = $this->client->request('GET', '/s/companytag/edit/' . $companyTag->getId());
+        $crawler    = $this->client->request('GET', '/s/companytag/edit/'.$companyTag->getId());
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString('Test Tag 33', $this->client->getResponse()->getContent());
         $this->assertStringContainsString('Test description', $this->client->getResponse()->getContent());
-        $form                               = $crawler->filter('form[name=company_tag_entity]')->form();
-        $formValues                         = $form->getValues();
+        $form                                          = $crawler->filter('form[name=company_tag_entity]')->form();
+        $formValues                                    = $form->getValues();
         $formValues['company_tag_entity[description]'] = 'Test Tag description 1';
         $form->setValues($formValues);
         $this->client->submit($form);
         $this->assertResponseStatusCodeSame(200);
-        $this->client->request('GET', '/s/companytag/edit/' . $companyTag->getId());
+        $this->client->request('GET', '/s/companytag/edit/'.$companyTag->getId());
         $this->assertStringContainsString('Test Tag 33', $this->client->getResponse()->getContent());
         $this->assertStringContainsString('Test Tag description 1', $this->client->getResponse()->getContent());
-
-
     }
 
     private function activePlugin(bool $isPublished = true): void

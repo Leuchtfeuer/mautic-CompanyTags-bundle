@@ -121,7 +121,6 @@ class CompanyControllerTest extends MauticMysqlTestCase
             $result[] = $companyTag;
         }
 
-
         return $result;
     }
 
@@ -163,7 +162,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertSame(4, $numberOfTrInCompanyListTable);
 
         // Search for one company listed by tag
-        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"tagTest1"');
+        $crawler                         = $this->client->request('GET', '/s/companies?search=tag:"tagTest1"');
         $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
         $this->assertSame(3, $numberOfTrInCompanyListTable);
         $this->assertStringContainsString('Test Company View List', $this->client->getResponse()->getContent());
@@ -180,7 +179,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->registerCompany('Dee Gee Company', 'test1@test.com');
         $this->assertStringContainsString('Edit Company Dee Gee Company', $this->client->getResponse()->getContent());
         // Search for tree companies listed
-        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"tagTest3"');
+        $crawler                         = $this->client->request('GET', '/s/companies?search=tag:"tagTest3"');
         $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
         $this->assertSame(2, $numberOfTrInCompanyListTable);
         $this->assertStringContainsString('Foo Baa Company', $this->client->getResponse()->getContent());
@@ -191,7 +190,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $tags = $this->addCompanyTags(['tagTest1']);
         // Set one Company with one other tags
         $this->registerCompany('Foo Baa Company', 'test1@test.com', [$tags[0]->getId()]);
-        $crawler  = $this->client->request('GET', '/s/companies?search=tag:"foobaa"');
+        $crawler                         = $this->client->request('GET', '/s/companies?search=tag:"foobaa"');
         $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
         $this->assertSame(0, $numberOfTrInCompanyListTable);
     }
@@ -203,7 +202,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $formValues                          = $form->getValues();
         $formValues['company[companyname]']  = $companyName;
         $formValues['company[companyemail]'] = $companyEmail;
-        if (!empty($tags)){
+        if (!empty($tags)) {
             $formValues['custom_company[tag]']   = $tags;
         }
         $form->setValues($formValues);

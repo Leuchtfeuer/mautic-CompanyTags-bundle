@@ -50,11 +50,7 @@ class CompanyController extends CompanyControllerBase
     }
 
     /**
-     * @param Request $request
-     * @param PageHelperFactoryInterface $pageHelperFactory
      * @param int $page
-     *
-     * @return JsonResponse|RedirectResponse|Response
      */
     public function indexAction(Request $request, PageHelperFactoryInterface $pageHelperFactory, $page = 1): RedirectResponse|JsonResponse|Response
     {
@@ -90,7 +86,7 @@ class CompanyController extends CompanyControllerBase
         $filter     = $this->filterByCompanyTag($search);
         $orderBy    = $request->getSession()->get('mautic.company.orderby', 'comp.companyname');
         $orderByDir = $request->getSession()->get('mautic.company.orderbydir', 'ASC');
-        $companies = $this->getModel('lead.company')->getEntities(
+        $companies  = $this->getModel('lead.company')->getEntities(
             [
                 'start'          => $start,
                 'limit'          => $limit,
@@ -155,27 +151,27 @@ class CompanyController extends CompanyControllerBase
     }
 
     /**
-     * @param $search
      * @return array<mixed>
      */
     private function filterByCompanyTag($search): array
     {
         // tag:"bola"
         $defaultFilter = ['string' => $search, 'force' => []];
-        if(!str_contains($search, 'tag:')) {
+        if (!str_contains($search, 'tag:')) {
             return $defaultFilter;
         }
         $tag = str_replace('tag:', '', $search);
         $tag = str_replace('"', '', $tag);
         $tag = $this->companyTagModel->getRepository()->findOneBy(['tag' => $tag]);
-        if(!$tag) {
+        if (!$tag) {
             return $defaultFilter;
         }
         $companies = $tag->getCompanies()->toArray();
 
-        $companyIds = array_map(function($company) {
+        $companyIds = array_map(function ($company) {
             return $company->getId();
         }, $companies);
+
         return [
             'force' => [
                 [
