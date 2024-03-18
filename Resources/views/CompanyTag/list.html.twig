@@ -15,7 +15,7 @@
 {% block actions %}
     {{- include('@MauticCore/Helper/page_actions.html.twig', {
         'templateButtons' : {
-            'new' : permissions['comppanytag:companytags:create'],
+            'new' : permissions['companytag:companytags:create'],
         },
         'routeBase' : 'companytag',
         'langVar'   : 'companytag.companytag',
@@ -43,7 +43,7 @@
                                     'langVar': 'companytag.tag',
                                     'routeBase': 'companytag',
                                     'templateButtons': {
-                                        'delete': permissions['comppanytag:companytags:delete'],
+                                        'delete': permissions['companytag:companytags:delete'],
                                     }
                                 }) }}
                             {{ include(
@@ -83,8 +83,8 @@
                                     {{- include('@MauticCore/Helper/list_actions.html.twig', {
                                         item: item,
                                         templateButtons: {
-                                            edit: permissions['comppanytag:companytags:edit'],
-                                            delete: permissions['comppanytag:companytags:delete'],
+                                            edit: permissions['companytag:companytags:edit'],
+                                            delete: permissions['companytag:companytags:delete'],
                                         },
                                         routeBase: 'companytag',
                                         langVar: 'companytag.tag',
@@ -103,7 +103,7 @@
                                 </td>
                                 <td>
                                     <div>
-                                        {% if permissions['comppanytag:companytags:edit'] %}
+                                        {% if permissions['companytag:companytags:view'] %}
                                             <a href="{{ path('mautic_companytag_action', {
                                                 objectAction: 'view',
                                                 objectId: item.getId()
