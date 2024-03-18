@@ -155,7 +155,6 @@ class CompanyController extends CompanyControllerBase
      */
     private function filterByCompanyTag($search): array
     {
-        // tag:"bola"
         $defaultFilter = ['string' => $search, 'force' => []];
         if (!str_contains($search, 'tag:')) {
             return $defaultFilter;
