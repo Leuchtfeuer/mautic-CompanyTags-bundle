@@ -66,7 +66,7 @@ class CompanyTagModel extends FormModel
 
     public function removeCompanyTag(Company $company, CompanyTags $companyTags): void
     {
-        $companyTags->removeCompany($company);
+        $resultRemove = $companyTags->removeCompany($company);
         $this->saveEntity($companyTags);
     }
 

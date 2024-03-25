@@ -86,8 +86,8 @@ class AjaxController extends CommonAjaxController
         if (!$tagId || !$companyTagId) {
             return $this->sendJsonResponse(['success' => 0]);
         }
-        $companyTag = $this->companyTagModel->getRepository()->find($tagId);
         $company    = $this->companyModel->getRepository()->find($companyTagId);
+        $companyTag = $this->companyTagModel->getRepository()->find($tagId);
         if (!$companyTag || !$company) {
             return $this->sendJsonResponse(['success' => 0]);
         }
