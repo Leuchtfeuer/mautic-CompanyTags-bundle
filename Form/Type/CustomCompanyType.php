@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type;
 
-use Mautic\LeadBundle\Form\Type\CompanyType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -38,5 +37,4 @@ class CustomCompanyType extends AbstractType
             ]
         );
     }
-
 }

@@ -134,7 +134,7 @@ class CompanyTags
         $this->companies->removeElement($company);
     }
 
-    public function getCompanies(): ArrayCollection
+    public function getCompanies()
     {
         return $this->companies;
     }

@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type;
 
-use Mautic\LeadBundle\Form\Type\TagType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
