@@ -16,6 +16,7 @@
 {% block headerTitle %}{{ company.name }}{% endblock %}
 
 {% block actions %}
+{{ includeScript('plugins/LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js') }}
 {% set canEdit     = securityHasEntityAccess(permissions['lead:leads:editown'], permissions['lead:leads:editother'], company.permissionUser) %}
 {% set canMerge    = securityHasEntityAccess(permissions['lead:leads:deleteown'], permissions['lead:leads:deleteother'], company.permissionUser) %}
 {% set canDownload = securityHasEntityAccess(permissions['lead:leads:viewown'], permissions['lead:leads:viewother'], company.permissionUser) %}
@@ -224,11 +225,19 @@
                     {% for tag in tags %}
                         <p>
                             <h5 class="pull-left mt-xs mr-xs">
-                                <span class="label label-success label-tag">
-                                    <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" style="color: white;">
-                                         {{ tag.tag|purify }}
-                                    </a>
-                                </span>
+                                <div class="std-toolbar btn-group">
+                                    <span class="btn btn-success btn-sm label-tag">
+                                        <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
+                                             {{ tag.tag|purify }}
+                                        </a>
+
+                                    </span>
+                                    <span class="btn btn-success btn-sm label-tag">
+                                        <a data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)">
+                                            <i class="fa fa-trash"></i>
+                                        </a>
+                                    </span>
+                                </div>
                             </h5>
                         </p>
                     {% endfor %}

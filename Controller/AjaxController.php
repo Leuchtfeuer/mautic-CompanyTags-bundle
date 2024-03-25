@@ -8,10 +8,12 @@ use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
 use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\CoreBundle\Helper\UserHelper;
 use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Service\FlashBag;
 use Mautic\CoreBundle\Translation\Translator;
+use Mautic\LeadBundle\Model\CompanyModel;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,7 +35,8 @@ class AjaxController extends CommonAjaxController
         FlashBag $flashBag,
         ?RequestStack $requestStack,
         ?CorePermissions $security,
-        private CompanyTagModel $companyTagModel
+        private CompanyTagModel $companyTagModel,
+        private CompanyModel $companyModel
     ) {
         parent::__construct($doctrine, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
     }
@@ -70,6 +73,31 @@ class AjaxController extends CommonAjaxController
                 'tags'    => $tagOptions,
             ];
         } else {
+            $data = ['success' => 0];
+        }
+
+        return $this->sendJsonResponse($data);
+    }
+
+    public function removeCompanyCompanyTagAction(Request $request): JsonResponse
+    {
+        $tagId        = (int) InputHelper::clean($request->request->get('tagId'));
+        $companyTagId = (int) InputHelper::clean($request->request->get('companyId'));
+        if (!$tagId || !$companyTagId) {
+            return $this->sendJsonResponse(['success' => 0]);
+        }
+        $companyTag = $this->companyTagModel->getRepository()->find($tagId);
+        $company    = $this->companyModel->getRepository()->find($companyTagId);
+        if (!$companyTag || !$company) {
+            return $this->sendJsonResponse(['success' => 0]);
+        }
+        $this->companyTagModel->removeCompanyTag($company, $companyTag);
+        $tags         = $this->companyTagModel->getRepository()->getTagsByCompany($company);
+        $tagsIdsSaved = array_map(function ($tag) {
+            return $tag->getId();
+        }, $tags);
+        $data = ['success' => 1];
+        if (in_array($tagId, $tagsIdsSaved)) {
             $data = ['success' => 0];
         }
 
