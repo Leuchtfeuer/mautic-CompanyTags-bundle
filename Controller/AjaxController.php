@@ -45,7 +45,7 @@ class AjaxController extends CommonAjaxController
     {
         $tags = $request->request->get('tags');
         $tags = json_decode($tags, true);
-
+        $data = ['success' => 0];
         if (is_array($tags)) {
             $newTags   = [];
 
@@ -72,8 +72,6 @@ class AjaxController extends CommonAjaxController
                 'success' => 1,
                 'tags'    => $tagOptions,
             ];
-        } else {
-            $data = ['success' => 0];
         }
 
         return $this->sendJsonResponse($data);
