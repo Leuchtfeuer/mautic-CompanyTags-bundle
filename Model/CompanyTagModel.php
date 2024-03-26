@@ -32,7 +32,7 @@ class CompanyTagModel extends FormModel
 
     public function getPermissionBase()
     {
-        return 'comppanytag:companytags';
+        return 'companytag:companytags';
     }
 
     /**

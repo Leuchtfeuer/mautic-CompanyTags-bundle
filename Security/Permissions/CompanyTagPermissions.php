@@ -10,7 +10,7 @@ class CompanyTagPermissions extends AbstractPermissions
     public function __construct($params)
     {
         parent::__construct($params);
-        $this->addStandardPermissions(['companytags']);
+        $this->addExtendedPermissions('companytags');
     }
 
     public function getName(): string

@@ -151,7 +151,7 @@ class CompanyTags
         return false;
     }
 
-    public function getCompanies(): ArrayCollection
+    public function getCompanies()
     {
         if (!$this->companies instanceof ArrayCollection) {
             $this->loadCompanies();
