@@ -33,7 +33,7 @@ Mautic.removeCompanyCompanyTag = function (el) {
             companyId:companyId
         }, function(response) {
         if (response.success == 1) {
-            mQuery(el).parent('span').parent('div').remove();
+            mQuery(el).parent('div').remove();
         }
     });
 };

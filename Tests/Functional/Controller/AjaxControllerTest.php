@@ -37,9 +37,13 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString(self::TAG_ONE, $this->client->getResponse()->getContent());
         $this->assertStringContainsString(self::TAG_TWO, $this->client->getResponse()->getContent());
         $tags = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($this->company);
-        $this->client->request('GET', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag', ['companyId' => $this->company->getId(), 'tagId' => $tags[0]->getId()]);
+        $this->assertCount(2, $tags);
+        $newCompany = $this->em->getRepository(Company::class)->find($this->company->getId());
+        $this->client->request('POST', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag', ['companyId' => $this->company->getId(), 'tagId' => $tags[0]->getId()]);
         $this->assertSame(200, $this->client->getResponse()->getStatusCode());
-        $crawler = $this->client->request('GET', '/s/companies/view/'.$this->company->getId());
+        $this->assertStringContainsString('{"success":1}', $this->client->getResponse()->getContent());
+        $tags = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($this->company);
+        $this->assertCount(1, $tags);
     }
 
     private function activePlugin(bool $isPublished = true): void
@@ -124,6 +128,6 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString(self::TAG_ONE, $this->client->getResponse()->getContent());
         $this->assertStringContainsString(self::TAG_TWO, $this->client->getResponse()->getContent());
 
-        return $this->em->getRepository(Company::class)->findOneBy(['name' => $name], ['id' => 'DESC']);
+        return $this->em->getRepository(Company::class)->findOneBy(['name' => $name]);
     }
 }
