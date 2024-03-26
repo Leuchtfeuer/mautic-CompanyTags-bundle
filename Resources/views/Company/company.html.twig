@@ -231,15 +231,14 @@
                         <p>
                             <h5 class="pull-left mt-xs mr-xs">
                                 <div class="std-toolbar btn-group">
-                                    <span class="btn btn-success btn-sm label-tag">
+                                    <span class="btn btn-success btn-sm label label-success" >
                                         <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
                                              {{ tag.tag|purify }}
                                         </a>
-
                                     </span>
-                                    <span class="btn btn-success btn-sm label-tag" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)">
-                                        <a data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}">
-                                            <i class="fa fa-trash"></i>
+                                    <span data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}"  class="btn btn-success btn-sm label label-success" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)">
+                                        <a data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" style="color: white;">
+                                            x
                                         </a>
                                     </span>
                                 </div>
