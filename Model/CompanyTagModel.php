@@ -73,11 +73,6 @@ class CompanyTagModel extends FormModel
             ->setParameter('company_id', $company->getId())
             ->setParameter('tag_id', $companyTags->getId());
         $qb->executeQuery();
-
-//        $resultRemove = $companyTags->removeCompany($company);
-        // //        $this->em->getConfiguration();
-//        dd($this->em->getConfiguration());
-//        $this->saveEntity($companyTags);
     }
 
     /**
