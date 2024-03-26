@@ -23,7 +23,7 @@ class CompanyTags
     public function __construct(string $tag = null, bool $clean = true)
     {
         $this->tag            = $clean && $tag ? $this->validateTag($tag) : $tag;
-        $this->companies      = new ArrayCollection();
+        $this->loadCompanies();
     }
 
     public static function loadMetadata(ClassMetadata $metadata): void
@@ -129,13 +129,47 @@ class CompanyTags
         }
     }
 
-    public function removeCompany(Company $company): void
+    public function removeCompany(Company $company): bool
     {
-        $this->companies->removeElement($company);
+        $key = $this->checkExistCompany($company);
+        if (false === $key) {
+            return false;
+        }
+        $this->companies->remove($key);
+
+        return true;
+    }
+
+    private function checkExistCompany(Company $company): bool|int
+    {
+        foreach ($this->companies as $key => $companyTag) {
+            if ($companyTag->getId() === $company->getId()) {
+                return $key;
+            }
+        }
+
+        return false;
     }
 
     public function getCompanies()
     {
+        if (!$this->companies instanceof ArrayCollection) {
+            $this->loadCompanies();
+        }
+
         return $this->companies;
+    }
+
+    private function loadCompanies(): void
+    {
+        if (empty($this->companies)) {
+            $this->companies = new ArrayCollection();
+        } else {
+            $arrayCollection = new ArrayCollection();
+            foreach ($this->companies as $company) {
+                $arrayCollection->add($company);
+            }
+            $this->companies = $arrayCollection;
+        }
     }
 }

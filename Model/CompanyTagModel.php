@@ -66,8 +66,13 @@ class CompanyTagModel extends FormModel
 
     public function removeCompanyTag(Company $company, CompanyTags $companyTags): void
     {
-        $companyTags->removeCompany($company);
-        $this->saveEntity($companyTags);
+        $qb = $this->em->getConnection()->createQueryBuilder();
+        $qb->delete(MAUTIC_TABLE_PREFIX.'companies_tags_xref')
+            ->where('company_id = :company_id')
+            ->andWhere('tag_id = :tag_id')
+            ->setParameter('company_id', $company->getId())
+            ->setParameter('tag_id', $companyTags->getId());
+        $qb->executeQuery();
     }
 
     /**
