@@ -231,7 +231,7 @@
                         <p>
                             <h5 class="pull-left mt-xs mr-xs">
                                 <div class="std-toolbar btn-group">
-                                    <span class="btn btn-success btn-sm label label-success" >
+                                    <span data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.viewtag'|trans }}" class="btn btn-success btn-sm label label-success" >
                                         <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
                                              {{ tag.tag|purify }}
                                         </a>
