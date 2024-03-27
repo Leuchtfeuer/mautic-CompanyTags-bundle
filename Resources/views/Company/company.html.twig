@@ -230,18 +230,12 @@
                     {% for tag in tags %}
                         <p>
                             <h5 class="pull-left mt-xs mr-xs">
-                                <div class="std-toolbar btn-group">
-                                    <span data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.viewtag'|trans }}" class="btn btn-success btn-sm label label-success" >
-                                        <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
-                                             {{ tag.tag|purify }}
-                                        </a>
-                                    </span>
-                                    <span data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}"  class="btn btn-success btn-sm label label-success" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)">
-                                        <a data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" style="color: white;">
-                                            x
-                                        </a>
-                                    </span>
-                                </div>
+                                <span class="label label-success label-tag">
+                                    <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
+                                         {{ tag.tag|purify }}
+                                    </a>
+                                    <i data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}" class="fa fa-times has-click-event" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)"></i>
+                                </span>
                             </h5>
                         </p>
                     {% endfor %}
