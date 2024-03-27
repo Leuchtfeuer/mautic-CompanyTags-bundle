@@ -23,8 +23,9 @@ Mautic.createCompanyTag = function (el) {
         Mautic.removeLabelLoadingIndicator();
     });
 };
+
 Mautic.removeCompanyCompanyTag = function (el) {
-    mQuery('data-company-tag');
+    mQuery(el).removeClass('fa-times').addClass('fa-spinner fa-spin');
     var companyId = mQuery(el).attr('data-company-id');
     var tagId = mQuery(el).attr('data-tag-id');
     Mautic.ajaxActionRequest('plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag',
@@ -33,7 +34,7 @@ Mautic.removeCompanyCompanyTag = function (el) {
             companyId:companyId
         }, function(response) {
         if (response.success == 1) {
-            mQuery(el).parent('div').remove();
+            mQuery(el).parent('span').fadeOut(300, function() { mQuery(this).remove(); });
         }
     });
 };
