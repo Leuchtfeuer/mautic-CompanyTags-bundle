@@ -10,6 +10,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\ModifyCompanyTagsType;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\LeuchtfeuerCompanyTagsEvents;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Mautic\LeadBundle\Entity\Company;
 
 class CampaignSubscriber implements EventSubscriberInterface
 {
@@ -69,7 +70,9 @@ class CampaignSubscriber implements EventSubscriberInterface
             ]
         );
 
-        $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
+        if($company instanceof Company && (!empty($tagsToAdd) || !empty($tagsToRemove))) {
+            $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
+        }
 
         return;
     }
