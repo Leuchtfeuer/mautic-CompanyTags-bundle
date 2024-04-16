@@ -16,6 +16,7 @@
 {% block headerTitle %}{{ company.name }}{% endblock %}
 
 {% block actions %}
+{{ includeScript('plugins/LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js') }}
 {% set canEdit     = securityHasEntityAccess(permissions['lead:leads:editown'], permissions['lead:leads:editother'], company.permissionUser) %}
 {% set canMerge    = securityHasEntityAccess(permissions['lead:leads:deleteown'], permissions['lead:leads:deleteother'], company.permissionUser) %}
 {% set canDownload = securityHasEntityAccess(permissions['lead:leads:viewown'], permissions['lead:leads:viewother'], company.permissionUser) %}
@@ -230,9 +231,10 @@
                         <p>
                             <h5 class="pull-left mt-xs mr-xs">
                                 <span class="label label-success label-tag">
-                                    <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" style="color: white;">
+                                    <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
                                          {{ tag.tag|purify }}
                                     </a>
+                                    <i data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}" class="fa fa-times has-click-event" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)"></i>
                                 </span>
                             </h5>
                         </p>
