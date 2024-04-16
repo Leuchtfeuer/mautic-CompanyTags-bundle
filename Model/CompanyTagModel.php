@@ -60,8 +60,17 @@ class CompanyTagModel extends FormModel
 
     public function addCompanyTag(Company $company, CompanyTags $companyTags): void
     {
-        $companyTags->addCompany($company);
-        $this->saveEntity($companyTags);
+        $qb = $this->em->getConnection()->createQueryBuilder();
+        $qb->insert(MAUTIC_TABLE_PREFIX.'companies_tags_xref')
+            ->values(
+                [
+                    'company_id' => ':company_id',
+                    'tag_id'     => ':tag_id',
+                ]
+            )
+            ->setParameter('company_id', $company->getId())
+            ->setParameter('tag_id', $companyTags->getId());
+        $qb->executeQuery();
     }
 
     public function removeCompanyTag(Company $company, CompanyTags $companyTags): void
@@ -73,6 +82,27 @@ class CompanyTagModel extends FormModel
             ->setParameter('company_id', $company->getId())
             ->setParameter('tag_id', $companyTags->getId());
         $qb->executeQuery();
+    }
+
+    public function getCompaniesIdByTags(array $tagIds): array
+    {
+        $qb = $this->em->getConnection()->createQueryBuilder();
+        $qb->select('ctx.company_id')
+            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx')
+            ->where(
+                $qb->expr()->in('ctx.tag_id', $tagIds)
+            );
+
+        $sqlResult = $qb->executeQuery()->fetchAllAssociative();
+        if (empty($sqlResult)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($sqlResult as $result) {
+            $ids[] = $result['company_id'];
+        }
+        return $ids;
     }
 
     /**

@@ -18,7 +18,7 @@ class CompanyTags
     private ?string $tag;
     private $companies;
 
-    private ?string $description;
+    private ?string $description = null;
 
     public function __construct(string $tag = null, bool $clean = true)
     {

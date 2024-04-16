@@ -50,18 +50,19 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
 
     public function testCreateNewUserWithRoleCompanyTag()
     {
-        $role = $this->registerNewRole('Test Role Company Tag', 'Test Role Description Company Tag', ['viewown', 'viewother']);
+        $this->activePlugin();
+        $role = $this->registerNewRole('Test Role Company Tag','Test Role Description Company Tag',['viewown','viewother']);
         $this->client->request('GET', '/s/users/new');
         $this->assertResponseStatusCodeSame(200);
         $this->client->submitForm('Save', [
-            'user[firstName]'               => 'Test',
-            'user[lastName]'                => 'User',
-            'user[email]'                   => 'test@test.com',
-            'user[username]'                => 'testuser',
-            'user[isPublished]'             => true,
+            'user[firstName]' => 'Test',
+            'user[lastName]' => 'User',
+            'user[email]' => 'test@test.com',
+            'user[username]' => 'testuser',
+            'user[isPublished]' => true,
             'user[plainPassword][password]' => '123User***321',
-            'user[plainPassword][confirm]'  => '123User***321',
-            'user[role]'                    => $role->getId(),
+            'user[plainPassword][confirm]' => '123User***321',
+            'user[role]' => $role->getId(),
         ]);
         $this->loginUser('testuser');
         $this->client->setServerParameter('PHP_AUTH_USER', 'testuser');
@@ -74,8 +75,9 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
 
     public function testCreateNewUserWithJustRoleCompanyTagAccessingDeniedPages()
     {
-        $role = $this->registerNewRole('Test Role Company Tag', 'Test Role Description Company Tag', ['viewown', 'viewother']);
-        $this->registerNewUser('Test', 'User1', 'test1@test.com', 'testuser1', '123User***321', $role);
+        $this->activePlugin();
+        $role = $this->registerNewRole('Test Role Company Tag','Test Role Description Company Tag',['viewown','viewother']);
+        $this->registerNewUser('Test','User1','test1@test.com','testuser1','123User***321',$role);
         $this->loginUser('testuser1');
         $this->client->setServerParameter('PHP_AUTH_USER', 'testuser1');
         $this->client->setServerParameter('PHP_AUTH_PW', 'mautic');
@@ -117,6 +119,7 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
 
     public function testNewUserWithRoleAccesingViewCompanyTagsPage()
     {
+        $this->activePlugin();
         $companyTags1 = new CompanyTags();
         $companyTags1->setTag('CompanyTag1');
         $companyTags1->setDescription('Description tag 1');

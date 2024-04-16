@@ -165,18 +165,15 @@ class CompanyController extends CompanyControllerBase
         if (!$tag) {
             return $defaultFilter;
         }
-        $companies = $tag->getCompanies()->toArray();
 
-        $companyIds = array_map(function ($company) {
-            return $company->getId();
-        }, $companies);
+        $companiesIds = $this->companyTagModel->getCompaniesIdByTags([$tag->getId()]);
 
         return [
             'force' => [
                 [
                     'column' => 'comp.id',
                     'expr'   => 'in',
-                    'value'  => $companyIds,
+                    'value'  => $companiesIds,
                 ],
             ],
         ];
@@ -247,6 +244,7 @@ class CompanyController extends CompanyControllerBase
         $action       = $this->generateUrl('mautic_company_action', ['objectAction' => 'edit', 'objectId' => $objectId]);
         $method       = $request->getMethod();
         $company      = $request->request->get('company') ?? [];
+
         $updateSelect = 'POST' === $method
             ? ($company['updateSelect'] ?? false)
             : $request->get('updateSelect', false);
@@ -520,6 +518,18 @@ class CompanyController extends CompanyControllerBase
         );
     }
 
+    private function saveCompanyTags(Request $request, Company $entity)
+    {
+        $companyTagsStructure = $this->customFormCompanyTags($request, 'new', $entity);
+
+        if(!empty($companyTagsStructure['entitiesToAdd']) || !empty($companyTagsStructure['entitiesToRemove'])) {
+            $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
+            $this->addFlashMessage('mautic.companytag.form.create');
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @param int $objectId
      *
@@ -627,45 +637,46 @@ class CompanyController extends CompanyControllerBase
             $requestData = $request->request->get('custom_company');
         }
 
-        $newTagsEntities  = $requestData['tag'] ?? [];
-        $entitiesToRemove = $this->companyTagModel->getTagsByCompany($company);
-        if (!empty($newTagsEntities)) {
-            $newTagsEntities = $this->companyTagModel->getRepository()->findBy(['id' => $newTagsEntities]);
-            foreach ($entitiesToRemove as $key => $entity) {
-                if (in_array($entity, $newTagsEntities)) {
-                    unset($entitiesToRemove[$key]);
-                }
+        $requestToAdd = $requestTags  = $requestData['tag'] ?? [];
+        $entitiesCompany = $entitiesToRemove = $this->companyTagModel->getTagsByCompany($company);
+        if (empty($requestTags) && empty($entitiesCompany)) {
+            return [
+                'form'             => $this->formFactory->create(CustomCompanyType::class,$entitiesCompany),
+                'entitiesToAdd'    => [],
+                'entitiesToRemove' => [],
+            ];
+        }
+        $entitiesTags = $this->companyTagModel->getRepository()->findBy(['id' => $requestTags]);
+        if (empty($entitiesCompany)) {
+           return [
+               'form'             => $this->formFactory->create(CustomCompanyType::class),
+               'entitiesToAdd'    => $entitiesTags,
+               'entitiesToRemove' => $entitiesToRemove,
+           ];
+        }
+
+        foreach ($entitiesCompany as $key => $entity) {
+            if (in_array($entity->getId(), $requestTags)) {
+                unset($entitiesToRemove[$key]);
+            }
+            $entitiesCompanyIds[] = $entity->getId();
+
+        }
+
+        foreach ($requestTags as $key=>$tagId) {
+            if (in_array($tagId, $entitiesCompanyIds)) {
+                unset($requestToAdd[$key]);
             }
         }
 
-        if (!isset($request->request->get('custom_company')['tag']) && 'edit' !== $objectAction) {
-            return [
-                'form'             => $this->formFactory->create(CustomCompanyType::class),
-                'entitiesToAdd'    => $newTagsEntities,
-                'entitiesToRemove' => $entitiesToRemove,
-            ];
-        }
-
-        if ('edit' === $objectAction) {
-            $companyTags = $this->companyTagModel->getTagsByCompany($company);
-        }
-
-        if (empty($companyTags)) {
-            return [
-                'form'             => $this->formFactory->create(CustomCompanyType::class),
-                'entities'         => $newTagsEntities,
-                'entitiesToAdd'    => $newTagsEntities,
-                'entitiesToRemove' => $entitiesToRemove,
-            ];
-        }
-
-        $form = $this->formFactory->create(CustomCompanyType::class, $companyTags);
+        $entitiesToAdd = $this->companyTagModel->getRepository()->findBy(['id' => $requestToAdd]);
 
         return [
-            'form'             => $form,
-            'entities'         => $newTagsEntities,
-            'entitiesToAdd'    => $newTagsEntities,
+            'form'             => $this->formFactory->create(CustomCompanyType::class,$entitiesCompany),
+            'entitiesToAdd'    => $entitiesToAdd,
             'entitiesToRemove' => $entitiesToRemove,
+            'entities'         => $entitiesCompany,
         ];
+
     }
 }
