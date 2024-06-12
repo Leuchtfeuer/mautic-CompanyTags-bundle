@@ -17,8 +17,10 @@ use Mautic\LeadBundle\Controller\CompanyController as CompanyControllerBase;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Event\CompanyTagsEvent;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\CustomCompanyType;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\LeuchtfeuerCompanyTagsEvents;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -279,6 +281,7 @@ class CompanyController extends CompanyControllerBase
                     $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
                     $companyTags                  = $this->companyTagModel->getTagsByCompany($entity);
                     $companyTagsStructure['form'] = $this->formFactory->create(CustomCompanyType::class, $companyTags);
+                    $this->dispatcher->dispatch(new CompanyTagsEvent($entity), LeuchtfeuerCompanyTagsEvents::COMPANY_POS_UPDATE);
                     $this->addFlashMessage(
                         'mautic.core.notice.updated',
                         [
@@ -431,6 +434,7 @@ class CompanyController extends CompanyControllerBase
                     // form is valid so process the data
                     $model->saveEntity($entity);
                     $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
+                    $this->dispatcher->dispatch(new CompanyTagsEvent($entity), LeuchtfeuerCompanyTagsEvents::COMPANY_POS_SAVE);
                     $this->addFlashMessage(
                         'mautic.core.notice.created',
                         [
