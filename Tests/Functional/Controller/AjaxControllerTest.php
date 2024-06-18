@@ -86,15 +86,15 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $companyTag1 = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => self::TAG_ONE]);
         $companyTag2 = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => self::TAG_TWO]);
 
-//        $companyTag1 = new CompanyTags();
-//        $companyTag1->setTag(self::TAG_ONE. rand(1, 1000000));
-//        $companyTag1->setDescription('Description tag 1');
-//        $this->em->persist($companyTag1);
-//        $this->em->flush();
-//        $companyTag2 = new CompanyTags();
-//        $companyTag2->setTag(self::TAG_TWO. rand(1, 1000000));
-//        $this->em->persist($companyTag2);
-//        $this->em->flush();
+        //        $companyTag1 = new CompanyTags();
+        //        $companyTag1->setTag(self::TAG_ONE. rand(1, 1000000));
+        //        $companyTag1->setDescription('Description tag 1');
+        //        $this->em->persist($companyTag1);
+        //        $this->em->flush();
+        //        $companyTag2 = new CompanyTags();
+        //        $companyTag2->setTag(self::TAG_TWO. rand(1, 1000000));
+        //        $this->em->persist($companyTag2);
+        //        $this->em->flush();
 
         return [
             $companyTag1,
@@ -104,7 +104,7 @@ class AjaxControllerTest extends MauticMysqlTestCase
 
     private function addCompany($tags=[]): Company
     {
-//        $tags                                = $this->addCompanyTags();
+        //        $tags                                = $this->addCompanyTags();
         $random                              = rand(1, 1000000);
         $name                                = 'Test Company '.$random;
         $crawler                             = $this->client->request('GET', '/s/companies/new');

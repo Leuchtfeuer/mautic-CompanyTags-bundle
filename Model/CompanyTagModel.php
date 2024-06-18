@@ -102,6 +102,7 @@ class CompanyTagModel extends FormModel
         foreach ($sqlResult as $result) {
             $ids[] = $result['company_id'];
         }
+
         return $ids;
     }
 

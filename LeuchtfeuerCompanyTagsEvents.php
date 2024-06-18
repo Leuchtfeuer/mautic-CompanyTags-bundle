@@ -15,6 +15,4 @@ class LeuchtfeuerCompanyTagsEvents
     public const COMPANY_POS_SAVE = 'mautic.compaigntags.company_pos_save';
 
     public const COMPANY_POS_UPDATE = 'mautic.compaigntags.company_pos_update';
-
-
 }

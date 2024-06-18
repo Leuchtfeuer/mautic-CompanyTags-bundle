@@ -4,7 +4,6 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Event;
 
 use Mautic\CoreBundle\Event\CommonEvent;
 use Mautic\LeadBundle\Entity\Company;
-use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 
 class CompanyTagsEvent extends CommonEvent
 {
@@ -19,6 +18,4 @@ class CompanyTagsEvent extends CommonEvent
     {
         return $this->company;
     }
-
-
 }

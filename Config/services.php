@@ -18,5 +18,5 @@ return function (ContainerConfigurator $configurator): void {
     $services->load('MauticPlugin\\LeuchtfeuerCompanyTagsBundle\\', '../')
         ->exclude('../{'.implode(',', array_merge(MauticCoreExtension::DEFAULT_EXCLUDES, $excludes)).'}');
     $services->load('MauticPlugin\\LeuchtfeuerCompanyTagsBundle\\Entity\\', '../Entity/*Repository.php');
-    $services->alias('mautic.companytag.model.companytag', \MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel::class);
+    $services->alias('mautic.companytag.model.companytag', MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel::class);
 };

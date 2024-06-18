@@ -69,7 +69,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
     {
         $this->activePlugin();
         $this->testSaveNewAction('Test Company 22');
-        $newName = 'Test Company 22aaa';
+        $newName           = 'Test Company 22aaa';
         $companyEntity     = $this->em->getRepository(Company::class)->findOneBy(['name' => 'Test Company 22'], ['id' => 'DESC']);
         $companyTagsBefore = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($companyEntity);
         $this->assertCount(2, $companyTagsBefore);
@@ -85,7 +85,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString($newName, $this->client->getResponse()->getContent());
         $companyEntity     = $this->em->getRepository(Company::class)->findOneBy(['name' => $newName], ['id' => 'DESC']);
-        $companyTagsAfter = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($companyEntity);
+        $companyTagsAfter  = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($companyEntity);
         $this->assertCount(1, $companyTagsAfter);
     }
 
@@ -184,7 +184,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
     {
         $this->activePlugin();
         $tags                                = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
-//        dump($tags);
+        //        dump($tags);
         // Set one Company with two tags
         $this->registerCompany('Test Company View List', 'test@test.com', [$tags[0]->getId(), $tags[1]->getId()]);
         $this->assertStringContainsString('Edit Company Test Company View List', $this->client->getResponse()->getContent());
@@ -193,10 +193,9 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->registerCompany('Fee Lee Company', 'test1@test.com', [$tags[0]->getId()]);
         $this->assertStringContainsString('Edit Company Fee Lee Company', $this->client->getResponse()->getContent());
 
-        $crawler = $this->client->request('GET','/s/companytag');
-        $this->assertStringContainsString('View 2 Companies',$this->client->getResponse()->getContent());
-        $this->assertStringContainsString('View 1 Company',$this->client->getResponse()->getContent());
-
+        $crawler = $this->client->request('GET', '/s/companytag');
+        $this->assertStringContainsString('View 2 Companies', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('View 1 Company', $this->client->getResponse()->getContent());
     }
 
     public function testResearchBySameTagInOneCompany()

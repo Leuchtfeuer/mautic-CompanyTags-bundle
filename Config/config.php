@@ -8,20 +8,20 @@ return [
     'services'    => [
         'integrations' => [
             'mautic.integration.leuchtfeuercompanytags' => [
-                'class' => \MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\LeuchtfeuerCompanyTagsIntegration::class,
+                'class' => MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\LeuchtfeuerCompanyTagsIntegration::class,
                 'tags'  => [
                     'mautic.integration',
                     'mautic.basic_integration',
                 ],
             ],
             'mautic.integration.leuchtfeuercompanytags.configuration' => [
-                'class' => \MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Support\ConfigSupport::class,
+                'class' => MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Support\ConfigSupport::class,
                 'tags'  => [
                     'mautic.config_integration',
                 ],
             ],
             'mautic.integration.leuchtfeuercompanytags.config' => [
-                'class'     => \MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config::class,
+                'class'     => MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config::class,
                 'arguments' => [
                     'mautic.integrations.helper',
                 ],
