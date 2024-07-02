@@ -17,8 +17,10 @@ use Mautic\LeadBundle\Controller\CompanyController as CompanyControllerBase;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Model\CompanyModel;
 use Mautic\LeadBundle\Model\FieldModel;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Event\CompanyTagsEvent;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\CustomCompanyType;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\LeuchtfeuerCompanyTagsEvents;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -185,7 +187,7 @@ class CompanyController extends CompanyControllerBase
      * @param int  $objectId
      * @param bool $ignorePost
      *
-     * @return JsonResponse|\Symfony\Component\HttpFoundation\RedirectResponse|Response
+     * @return JsonResponse|RedirectResponse|Response
      */
     public function editAction(Request $request, $objectId, $ignorePost = false)
     {
@@ -279,6 +281,7 @@ class CompanyController extends CompanyControllerBase
                     $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
                     $companyTags                  = $this->companyTagModel->getTagsByCompany($entity);
                     $companyTagsStructure['form'] = $this->formFactory->create(CustomCompanyType::class, $companyTags);
+                    $this->dispatcher->dispatch(new CompanyTagsEvent($entity), LeuchtfeuerCompanyTagsEvents::COMPANY_POS_UPDATE);
                     $this->addFlashMessage(
                         'mautic.core.notice.updated',
                         [
@@ -386,7 +389,7 @@ class CompanyController extends CompanyControllerBase
         \assert($model instanceof CompanyModel);
 
         if (!($entity instanceof Company)) {
-            /** @var \Mautic\LeadBundle\Entity\Company $entity */
+            /** @var Company $entity */
             $entity = $model->getEntity();
         }
 
@@ -431,6 +434,7 @@ class CompanyController extends CompanyControllerBase
                     // form is valid so process the data
                     $model->saveEntity($entity);
                     $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
+                    $this->dispatcher->dispatch(new CompanyTagsEvent($entity), LeuchtfeuerCompanyTagsEvents::COMPANY_POS_SAVE);
                     $this->addFlashMessage(
                         'mautic.core.notice.created',
                         [
@@ -522,11 +526,13 @@ class CompanyController extends CompanyControllerBase
     {
         $companyTagsStructure = $this->customFormCompanyTags($request, 'new', $entity);
 
-        if(!empty($companyTagsStructure['entitiesToAdd']) || !empty($companyTagsStructure['entitiesToRemove'])) {
+        if (!empty($companyTagsStructure['entitiesToAdd']) || !empty($companyTagsStructure['entitiesToRemove'])) {
             $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
             $this->addFlashMessage('mautic.companytag.form.create');
+
             return true;
         }
+
         return false;
     }
 
@@ -575,7 +581,7 @@ class CompanyController extends CompanyControllerBase
             );
         }
 
-        /** @var \Mautic\LeadBundle\Entity\Company $company */
+        /** @var Company $company */
         $model->getRepository()->refetchEntity($company);
 
         // set some permissions
@@ -637,22 +643,22 @@ class CompanyController extends CompanyControllerBase
             $requestData = $request->request->get('custom_company');
         }
 
-        $requestToAdd = $requestTags  = $requestData['tag'] ?? [];
+        $requestToAdd    = $requestTags  = $requestData['tag'] ?? [];
         $entitiesCompany = $entitiesToRemove = $this->companyTagModel->getTagsByCompany($company);
         if (empty($requestTags) && empty($entitiesCompany)) {
             return [
-                'form'             => $this->formFactory->create(CustomCompanyType::class,$entitiesCompany),
+                'form'             => $this->formFactory->create(CustomCompanyType::class, $entitiesCompany),
                 'entitiesToAdd'    => [],
                 'entitiesToRemove' => [],
             ];
         }
         $entitiesTags = $this->companyTagModel->getRepository()->findBy(['id' => $requestTags]);
         if (empty($entitiesCompany)) {
-           return [
-               'form'             => $this->formFactory->create(CustomCompanyType::class),
-               'entitiesToAdd'    => $entitiesTags,
-               'entitiesToRemove' => $entitiesToRemove,
-           ];
+            return [
+                'form'             => $this->formFactory->create(CustomCompanyType::class),
+                'entitiesToAdd'    => $entitiesTags,
+                'entitiesToRemove' => $entitiesToRemove,
+            ];
         }
 
         foreach ($entitiesCompany as $key => $entity) {
@@ -660,7 +666,6 @@ class CompanyController extends CompanyControllerBase
                 unset($entitiesToRemove[$key]);
             }
             $entitiesCompanyIds[] = $entity->getId();
-
         }
 
         foreach ($requestTags as $key=>$tagId) {
@@ -672,11 +677,10 @@ class CompanyController extends CompanyControllerBase
         $entitiesToAdd = $this->companyTagModel->getRepository()->findBy(['id' => $requestToAdd]);
 
         return [
-            'form'             => $this->formFactory->create(CustomCompanyType::class,$entitiesCompany),
+            'form'             => $this->formFactory->create(CustomCompanyType::class, $entitiesCompany),
             'entitiesToAdd'    => $entitiesToAdd,
             'entitiesToRemove' => $entitiesToRemove,
             'entities'         => $entitiesCompany,
         ];
-
     }
 }
