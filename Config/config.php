@@ -47,6 +47,7 @@ return [
                 ],
             ],
             'mautic.companies.menu.sub.index' => [
+                'id'        => 'mautic.companies.menu.index',
                 'parent'    => 'mautic.companies.menu.index',
                 'route'     => 'mautic_company_index',
                 'access'    => ['lead:leads:viewother'],
