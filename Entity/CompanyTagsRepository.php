@@ -77,4 +77,13 @@ class CompanyTagsRepository extends CommonRepository
 
         return ($returnArray) ? $return : $return[$tagIds[0]];
     }
+
+    public function getAllTagObjects()
+    {
+        $query     = $this->createQueryBuilder('t')
+            ->select('t')
+            ->getQuery();
+
+        return $query->getResult();
+    }
 }
