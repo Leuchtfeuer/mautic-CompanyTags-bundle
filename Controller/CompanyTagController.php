@@ -202,6 +202,16 @@ class CompanyTagController extends AbstractStandardFormController
         return $this->deleteStandard($request, $objectId);
     }
 
+    /**
+     * Deletes a group of entities.
+     *
+     * @return JsonResponse|RedirectResponse
+     */
+    public function batchDeleteAction(Request $request)
+    {
+        return $this->batchDeleteStandard($request);
+    }
+
     protected function getModelName(): string
     {
         return 'companytag';
