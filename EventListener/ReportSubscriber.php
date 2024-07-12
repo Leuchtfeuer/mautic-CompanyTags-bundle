@@ -10,7 +10,7 @@ use Mautic\ReportBundle\Event\ReportGeneratorEvent;
 use Mautic\ReportBundle\ReportEvents;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use function Aws\filter;
+use Doctrine\DBAL\Connection;
 
 class ReportSubscriber implements EventSubscriberInterface
 {
@@ -25,6 +25,7 @@ class ReportSubscriber implements EventSubscriberInterface
     public function __construct(
         private CompanyReportData     $companyReportData,
         private CompanyTagsRepository $companyTagsRepository,
+        private Connection $db,
     )
     {
     }
@@ -61,7 +62,7 @@ class ReportSubscriber implements EventSubscriberInterface
         $tags = $this->companyTagsRepository->getAllTagObjects();
         $tagList = [];
         foreach ($tags as $tag) {
-            $tagList[$tag->getId()] = (string) $tag->getTag();
+            $tagList[$tag->getId()] = $tag->getTag();
         }
 
         $tagFilter = [self::COMPANY_TAGS_XREF_PREFIX.'.'.'tag_id' => [
@@ -70,7 +71,8 @@ class ReportSubscriber implements EventSubscriberInterface
             "type" => "select",
             "list" => $tagList,
             "operators" => [
-                "eq" => "mautic.core.operator.equals"
+                "in" => "mautic.core.operator.in",
+                "notIn" => "mautic.core.operator.notin"
             ]
         ]
         ];
@@ -98,27 +100,69 @@ class ReportSubscriber implements EventSubscriberInterface
     }
 
 
-    public function onReportGenerate(ReportGeneratorEvent $event){
-
+    public function onReportGenerate(ReportGeneratorEvent $event)
+    {
         if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
             return;
         }
 
-        $qb      = $event->getQueryBuilder();
+        $qb = $event->getQueryBuilder();
+        $qb
+            ->select('c.id AS company_id')
+            ->addSelect('
+            c.*,
+            ctx.*,
+            comp.id AS comp_id,
+            comp.*,
+            ct.*
+        ')
+            ->from(MAUTIC_TABLE_PREFIX . 'companies', 'c')
+            ->leftJoin('c', MAUTIC_TABLE_PREFIX . 'companies_tags_xref', 'ctx', 'ctx.company_id = c.id')
+            ->leftJoin('ctx', MAUTIC_TABLE_PREFIX . 'companies', 'comp', 'comp.id = ctx.company_id')
+            ->leftJoin('ctx', MAUTIC_TABLE_PREFIX . 'company_tags', 'ct', 'ct.id = ctx.tag_id');
 
+        $tagFilter = self::COMPANY_TAGS_XREF_PREFIX . '.' . 'tag_id';
+        if ($event->hasFilter($tagFilter)) {
+            $tagSubQuery = $this->db->createQueryBuilder();
+            $tagSubQuery->select('DISTINCT company_id')
+                ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
 
-        $qb->from(MAUTIC_TABLE_PREFIX.'companies', 'c');
+            $report = $event->getReport();
+            $filters = $report->getFilters();
 
-        if ($event->hasFilter(self::COMPANY_TAGS_XREF_PREFIX .'.'. 'tag_id')) {
-            $qb
-                ->leftJoin('c', MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx', 'ctx.company_id = c.id')
-                ->leftJoin('ctx', MAUTIC_TABLE_PREFIX.'companies', 'comp', 'comp.id = ctx.company_id')
-                ->leftJoin('ctx', MAUTIC_TABLE_PREFIX.'company_tags', 'ct', 'ct.id = ctx.tag_id');
+            foreach ($filters as $filter) {
+                if ($filter["column"] === $tagFilter) {
+                    if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
+                        $tagSubQuery->andWhere($tagSubQuery->expr()->in('ctx.tag_id', ':filter_value'));
+
+                        if (in_array($filter['condition'], ['in', 'notEmpty'])) {
+                            $qb->andWhere($qb->expr()->in('company_id', $tagSubQuery->getSQL()))
+                                ->setParameter('filter_value', $filter['value']);
+                        } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
+                            $qb->andWhere($qb->expr()->notIn('company_id', $tagSubQuery->getSQL()))
+                                ->setParameter('filter_value', $filter['value']);
+                        }
+                    }
+                }
+            }
         }
-
         $event->applyDateFilters($qb, 'date_added', 'comp');
-
     }
+        //$filters = $event->getFilterValues();
+        //Check if filter is the same as needed
+
+        /*
+        if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
+            $tagSubQuery->where($tagSubQuery->expr()->in('ltx.tag_id', $filter['value']));
+            //Change tagSubQuery to qb
+            //Adjust tables and columns
+        }
+        if (in_array($filter['condition'], ['in', 'notEmpty'])) {
+            $tagSubQuery->expr()->in('c.id', $qb->getSQL());
+        } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
+            $tagSubQuery->expr()->notIn('c.id', $qb->getSQL());
+        }
+    */
 
 /*
         public function onReportDisplay(ReportDataEvent $event): void
