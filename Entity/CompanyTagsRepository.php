@@ -96,6 +96,7 @@ public function getTagObjectsByIds($ids): array
 
     $query = $queryBuilder->getQuery();
     return $query->getResult();
+
 }
 
 }
