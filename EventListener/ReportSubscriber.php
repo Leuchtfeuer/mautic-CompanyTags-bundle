@@ -108,14 +108,6 @@ class ReportSubscriber implements EventSubscriberInterface
 
         $qb = $event->getQueryBuilder();
         $qb
-            ->select('c.id AS company_id')
-            ->addSelect('
-            c.*,
-            ctx.*,
-            comp.id AS comp_id,
-            comp.*,
-            ct.*
-        ')
             ->from(MAUTIC_TABLE_PREFIX . 'companies', 'c')
             ->leftJoin('c', MAUTIC_TABLE_PREFIX . 'companies_tags_xref', 'ctx', 'ctx.company_id = c.id')
             ->leftJoin('ctx', MAUTIC_TABLE_PREFIX . 'companies', 'comp', 'comp.id = ctx.company_id')
@@ -124,8 +116,12 @@ class ReportSubscriber implements EventSubscriberInterface
         $tagFilter = self::COMPANY_TAGS_XREF_PREFIX . '.' . 'tag_id';
         if ($event->hasFilter($tagFilter)) {
             $tagSubQuery = $this->db->createQueryBuilder();
-            $tagSubQuery->select('DISTINCT company_id')
-                ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
+            //$tagSubQuery->select('DISTINCT company_id')
+                //->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
+
+            $tagSubQuery->select('DISTINCT id')
+                ->from(MAUTIC_TABLE_PREFIX.'companies', 'c');
+            $abc = ['1,2'];
 
             $report = $event->getReport();
             $filters = $report->getFilters();
@@ -136,17 +132,18 @@ class ReportSubscriber implements EventSubscriberInterface
                         $tagSubQuery->andWhere($tagSubQuery->expr()->in('ctx.tag_id', ':filter_value'));
 
                         if (in_array($filter['condition'], ['in', 'notEmpty'])) {
+
                             $qb->andWhere($qb->expr()->in('company_id', $tagSubQuery->getSQL()))
-                                ->setParameter('filter_value', $filter['value']);
+                                ->setParameter('filter_value', $abc);
                         } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
                             $qb->andWhere($qb->expr()->notIn('company_id', $tagSubQuery->getSQL()))
-                                ->setParameter('filter_value', $filter['value']);
+                                ->setParameter('filter_value', $abc);
                         }
                     }
                 }
             }
         }
-        $event->applyDateFilters($qb, 'date_added', 'comp');
+        //$event->applyDateFilters($qb, 'date_added', 'comp');
     }
         //$filters = $event->getFilterValues();
         //Check if filter is the same as needed
