@@ -34,10 +34,10 @@ return [
     'menu'        => [
         'main' => [
             'mautic.companytag.menu' => [
+                'parent'    => 'mautic.companies.menu.index',
                 'route'     => 'mautic_companytag_index',
-                'iconClass' => 'fa-tags',
                 'access'    => 'companytag:companytags:view',
-                'priority'  => 1,
+                'priority'  => 20,
                 'checks'    => [
                     'integration' => [
                         'LeuchtfeuerCompanyTags' => [
@@ -45,6 +45,13 @@ return [
                         ],
                     ],
                 ],
+            ],
+            'mautic.companies.menu.sub.index' => [
+                'id'        => 'mautic.companies.menu.index',
+                'parent'    => 'mautic.companies.menu.index',
+                'route'     => 'mautic_company_index',
+                'access'    => ['lead:leads:viewother'],
+                'priority'  => 100,
             ],
         ],
     ],
