@@ -40,16 +40,11 @@ class ReportSubscriber implements EventSubscriberInterface
         $columns = $this->companyReportData->getCompanyData();
         unset($columns['companies_lead.is_primary'], $columns['companies_lead.date_added']);
 
-        // getTagsForFilters
-        $tags    = $this->companyTagsRepository->getAllTagObjects();
-        $tagList = [];
-        foreach ($tags as $tag) {
-            $tagList[$tag->getId()] = $tag->getTag();
-        }
+        $tagList = $this->getFilterTags();
 
         $tagFilter = [self::COMPANY_TAGS_XREF_PREFIX.'.tag_id' => [
             'alias'     => 'companytags',
-            'label'     => 'Company Tag',
+            'label'     => 'mautic.companytag.report.companytags',
             'type'      => 'select',
             'list'      => $tagList,
             'operators' => [
@@ -79,7 +74,7 @@ class ReportSubscriber implements EventSubscriberInterface
         $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'table', 'mautic.lead.company.table.top.cities');
     }
 
-    public function onReportGenerate(ReportGeneratorEvent $event)
+    public function onReportGenerate(ReportGeneratorEvent $event): void
     {
         if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
             return;
@@ -127,5 +122,19 @@ class ReportSubscriber implements EventSubscriberInterface
                 }
             }
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getFilterTags(): array
+    {
+        $tags    = $this->companyTagsRepository->getAllTagObjects();
+        $tagList = [];
+        foreach ($tags as $tag) {
+            $tagList[(string) $tag->getId()] = (string) $tag->getTag();
+        }
+
+        return $tagList;
     }
 }
