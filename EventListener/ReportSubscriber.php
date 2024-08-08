@@ -3,6 +3,8 @@
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\EventListener;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
+use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\LeadBundle\Model\CompanyReportData;
 use Mautic\ReportBundle\Event\ReportBuilderEvent;
 use Mautic\ReportBundle\Event\ReportGeneratorEvent;
@@ -57,7 +59,6 @@ class ReportSubscriber implements EventSubscriberInterface
         ];
         $filters = array_merge($columns, $tagFilter);
 
-        // d($filters);
         $event->addTable(
             self::CONTEXT_COMPANY_TAGS,
             [
@@ -74,56 +75,6 @@ class ReportSubscriber implements EventSubscriberInterface
         $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'table', 'mautic.lead.company.table.top.cities');
     }
 
-    public function onReportGenerate(ReportGeneratorEvent $event): void
-    {
-        if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
-            return;
-        }
-
-        $qb = $event->getQueryBuilder();
-        $qb
-            ->from(MAUTIC_TABLE_PREFIX.'companies', 'comp')
-            ->leftJoin('comp', MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx', 'ctx.company_id = comp.id')
-            ->leftJoin('ctx', MAUTIC_TABLE_PREFIX.'company_tags', 'ct', 'ct.id = ctx.tag_id');
-
-        $tagFilter = self::COMPANY_TAGS_XREF_PREFIX.'.tag_id';
-        if ($event->hasFilter($tagFilter)) {
-            $filters  = $event->getReport()->getFilters();
-
-            foreach ($filters as $filter) {
-                if ($filter['column'] === $tagFilter) {
-                    if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
-                    }
-                }
-                if (in_array($filter['condition'], ['empty', 'notIn']) && !empty($filter['value'])) {
-                    $filters   = $event->getReport()->getFilters();
-                    $filters[] = [
-                        'column'    => 'ctx.company_id',
-                        'value'     => '',
-                        'condition' => 'empty',
-                        'dynamic'   => null,
-                        'glue'      => 'or',
-                    ];
-                    $event->getReport()->setFilters($filters);
-
-                    $tagSubQuery = $this->db->createQueryBuilder();
-                    $tagSubQuery->select('DISTINCT id')
-                        ->from(MAUTIC_TABLE_PREFIX.'companies', 'c')
-                        ->leftJoin('c', MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx', 'ctx.company_id = c.id');
-                    $tagSubQuery->andWhere($tagSubQuery->expr()->in('ctx.tag_id', ':filter_value'));
-
-                    if (in_array($filter['condition'], ['in', 'notEmpty'])) {
-                        $qb->andWhere($qb->expr()->in('comp.id', $tagSubQuery->getSQL()))
-                            ->setParameter('filter_value', $filter['value']);
-                    } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
-                        $qb->andWhere($qb->expr()->notIn('comp.id', $tagSubQuery->getSQL()))
-                            ->setParameter('filter_value', $filter['value']);
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * @return array<string, string>
      */
@@ -136,5 +87,178 @@ class ReportSubscriber implements EventSubscriberInterface
         }
 
         return $tagList;
+    }
+
+    public function onReportGenerate(ReportGeneratorEvent $event): void
+    {
+        // if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
+        //    return;
+        // }
+
+        $qb      = $event->getQueryBuilder();
+        $filters = $event->getReport()->getFilters();
+        $options = $event->getOptions()['columns'];
+
+        $qb
+            ->from(MAUTIC_TABLE_PREFIX.'companies', 'comp');
+        // ->leftJoin('comp', MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx', 'ctx.company_id = comp.id')
+        // ->leftJoin('ctx', MAUTIC_TABLE_PREFIX.'company_tags', 'ct', 'ct.id = ctx.tag_id');
+
+        $expr     = $qb->expr();
+        $orGroups = [];
+        $andGroup = [];
+        $filters  = $event->getReport()->getFilters();
+
+        if (count($filters)) {
+            foreach ($filters as $i => $filter) {
+                $exprFunction = $filter['expr'] ?? $filter['condition'];
+                $paramName    = sprintf('i%dc%s', $i, InputHelper::alphanum($filter['column']));
+
+                if (array_key_exists('glue', $filter) && 'or' === $filter['glue']) {
+                    if ($andGroup) {
+                        $orGroups[] = CompositeExpression::and(...$andGroup);
+                        $andGroup   = [];
+                    }
+                }
+
+                $companyTagCondition = $this->getCompanyTagCondition($filter);
+                if ($companyTagCondition) {
+                    $andGroup[] = $companyTagCondition;
+                    continue;
+                }
+                switch ($exprFunction) {
+                    case 'notEmpty':
+                        $andGroup[] = $expr->isNotNull($filter['column']);
+                        if ($this->doesColumnSupportEmptyValue($filter, $options)) {
+                            $andGroup[] = $expr->neq($filter['column'], $expr->literal(''));
+                        }
+                        break;
+                    case 'empty':
+                        $expression = $qb->expr()->or(
+                            $qb->expr()->isNull($filter['column'])
+                        );
+                        if ($this->doesColumnSupportEmptyValue($filter, $options)) {
+                            $expression = $expression->with(
+                                $qb->expr()->eq($filter['column'], $expr->literal(''))
+                            );
+                        }
+
+                        $andGroup[] = $expression;
+                        break;
+                    case 'neq':
+                        $columnValue = ":$paramName";
+                        $expression  = $qb->expr()->or(
+                            $qb->expr()->isNull($filter['column']),
+                            $qb->expr()->$exprFunction($filter['column'], $columnValue)
+                        );
+                        $qb->setParameter($paramName, $filter['value']);
+                        $andGroup[] = $expression;
+                        break;
+                    default:
+                        if ('' == trim($filter['value'])) {
+                            // Ignore empty
+                            break;
+                        }
+
+                        $columnValue = ":$paramName";
+                        $type        = $options[$filter['column']]['type'];
+                        if (isset($options[$filter['column']]['formula'])) {
+                            $filter['column'] = $options[$filter['column']]['formula'];
+                        }
+
+                        switch ($type) {
+                            case 'bool':
+                            case 'boolean':
+                                if ((int) $filter['value'] > 1) {
+                                    // Ignore the "reset" value of "2"
+                                    break 2;
+                                }
+
+                                $qb->setParameter($paramName, $filter['value'], 'boolean');
+                                break;
+
+                            case 'float':
+                                $columnValue = (float) $filter['value'];
+                                break;
+
+                            case 'int':
+                            case 'integer':
+                                $columnValue = (int) $filter['value'];
+                                break;
+
+                            case 'string':
+                            case 'email':
+                            case 'url':
+                                switch ($exprFunction) {
+                                    case 'like':
+                                    case 'notLike':
+                                        $filter['value'] = !str_contains($filter['value'], '%') ? '%'.$filter['value'].'%' : $filter['value'];
+                                        break;
+                                    case 'startsWith':
+                                        $exprFunction    = 'like';
+                                        $filter['value'] = $filter['value'].'%';
+                                        break;
+                                    case 'endsWith':
+                                        $exprFunction    = 'like';
+                                        $filter['value'] = '%'.$filter['value'];
+                                        break;
+                                    case 'contains':
+                                        $exprFunction    = 'like';
+                                        $filter['value'] = '%'.$filter['value'].'%';
+                                        break;
+                                }
+
+                                $qb->setParameter($paramName, $filter['value']);
+                                break;
+
+                            default:
+                                $qb->setParameter($paramName, $filter['value']);
+                        }
+                        $andGroup[] = $expr->{$exprFunction}($filter['column'], $columnValue);
+                }
+            }
+        }
+
+        if ($orGroups) {
+            // Add the remaining $andGroup to the rest of the $orGroups if exists so we don't miss it.
+            $orGroups[] = CompositeExpression::and(...$andGroup);
+            $qb->andWhere(CompositeExpression::or(...$orGroups));
+        } elseif ($andGroup) {
+            $qb->andWhere(CompositeExpression::and(...$andGroup));
+        }
+
+        $event->getReport()->setFilters([]);
+    }
+
+    public function getCompanyTagCondition(array $filter): ?string
+    {
+        if ('ctx.tag_id' !== $filter['column']) {
+            return null;
+        }
+
+        $tagSubQuery = $this->db->createQueryBuilder();
+        $tagSubQuery->select('DISTINCT ctx.company_id')
+            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
+        // ->leftJoin('comp', MAUTIC_TABLE_PREFIX . 'companies_tags_xref', 'ctx', 'ctx.company_id = comp.id');
+
+        if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
+            $tagSubQuery->andWhere($tagSubQuery->expr()->in('ctx.tag_id', $filter['value']));
+            // $tagSubQuery->setParameter('filter_value', $filter['value']);
+        }
+
+        if (in_array($filter['condition'], ['in', 'notEmpty'])) {
+            return $tagSubQuery->expr()->in('comp.id', $tagSubQuery->getSQL());
+        } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
+            return $tagSubQuery->expr()->notIn('comp.id', $tagSubQuery->getSQL());
+        }
+
+        return null;
+    }
+
+    private function doesColumnSupportEmptyValue(array $filter, array $filterDefinitions): bool
+    {
+        $type = $filterDefinitions[$filter['column']]['type'] ?? null;
+
+        return !in_array($type, ['date', 'datetime'], true);
     }
 }
