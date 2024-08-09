@@ -16,7 +16,7 @@ class ReportSubscriber implements EventSubscriberInterface
 {
     public const CONTEXT_COMPANY_TAGS     = 'company_tags';
     public const COMPANY_TAGS_XREF_PREFIX = 'ctx';
-    public const COMPANY_GROUP            = 'companies';
+    public const COMPANY_TABLE            = 'companies';
     public const COMPANIES_PREFIX         = 'comp';
     public const COMPANY_TAGS_XREF_TABLE  = 'companies_tags_xref';
 
@@ -68,7 +68,7 @@ class ReportSubscriber implements EventSubscriberInterface
                 'columns'      => $columns,
                 'filters'      => $filters,
             ],
-            self::COMPANY_GROUP
+            self::COMPANY_TABLE
         );
 
         $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'line', 'mautic.lead.graph.line.companies');
@@ -93,6 +93,10 @@ class ReportSubscriber implements EventSubscriberInterface
 
     public function onReportGenerate(ReportGeneratorEvent $event): void
     {
+        if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
+            return;
+        }
+
         $qb       = $event->getQueryBuilder();
         $filters  = $event->getReport()->getFilters();
         $options  = $event->getOptions()['columns'];
@@ -100,7 +104,7 @@ class ReportSubscriber implements EventSubscriberInterface
         $andGroup = [];
 
         $qb
-            ->from(MAUTIC_TABLE_PREFIX.'companies', 'comp');
+            ->from(MAUTIC_TABLE_PREFIX.self::COMPANY_TABLE, self::COMPANIES_PREFIX);
 
         $expr     = $qb->expr();
 
