@@ -14,9 +14,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ReportSubscriber implements EventSubscriberInterface
 {
-    public const CONTEXT_COMPANY_TAGS = 'company_tags';
-
+    public const CONTEXT_COMPANY_TAGS     = 'company_tags';
     public const COMPANY_TAGS_XREF_PREFIX = 'ctx';
+    public const COMPANY_GROUP            = 'companies';
+    public const COMPANIES_PREFIX         = 'comp';
+    public const COMPANY_TAGS_XREF_TABLE  = 'companies_tags_xref';
 
     public function __construct(
         private CompanyReportData $companyReportData,
@@ -66,7 +68,7 @@ class ReportSubscriber implements EventSubscriberInterface
                 'columns'      => $columns,
                 'filters'      => $filters,
             ],
-            'companies'
+            self::COMPANY_GROUP
         );
 
         $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'line', 'mautic.lead.graph.line.companies');
@@ -91,23 +93,16 @@ class ReportSubscriber implements EventSubscriberInterface
 
     public function onReportGenerate(ReportGeneratorEvent $event): void
     {
-        // if (!$event->checkContext([self::CONTEXT_COMPANY_TAGS])) {
-        //    return;
-        // }
-
-        $qb      = $event->getQueryBuilder();
-        $filters = $event->getReport()->getFilters();
-        $options = $event->getOptions()['columns'];
+        $qb       = $event->getQueryBuilder();
+        $filters  = $event->getReport()->getFilters();
+        $options  = $event->getOptions()['columns'];
+        $orGroups = [];
+        $andGroup = [];
 
         $qb
             ->from(MAUTIC_TABLE_PREFIX.'companies', 'comp');
-        // ->leftJoin('comp', MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx', 'ctx.company_id = comp.id')
-        // ->leftJoin('ctx', MAUTIC_TABLE_PREFIX.'company_tags', 'ct', 'ct.id = ctx.tag_id');
 
         $expr     = $qb->expr();
-        $orGroups = [];
-        $andGroup = [];
-        $filters  = $event->getReport()->getFilters();
 
         if (count($filters)) {
             foreach ($filters as $i => $filter) {
@@ -230,31 +225,36 @@ class ReportSubscriber implements EventSubscriberInterface
         $event->getReport()->setFilters([]);
     }
 
+    /**
+     * @param array<string, mixed> $filter
+     */
     public function getCompanyTagCondition(array $filter): ?string
     {
-        if ('ctx.tag_id' !== $filter['column']) {
+        if (self::COMPANY_TAGS_XREF_PREFIX.'.tag_id' !== $filter['column']) {
             return null;
         }
 
         $tagSubQuery = $this->db->createQueryBuilder();
-        $tagSubQuery->select('DISTINCT ctx.company_id')
-            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
-        // ->leftJoin('comp', MAUTIC_TABLE_PREFIX . 'companies_tags_xref', 'ctx', 'ctx.company_id = comp.id');
+        $tagSubQuery->select('DISTINCT '.self::COMPANY_TAGS_XREF_PREFIX.'.company_id')
+            ->from(MAUTIC_TABLE_PREFIX.self::COMPANY_TAGS_XREF_TABLE, self::COMPANY_TAGS_XREF_PREFIX);
 
         if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
-            $tagSubQuery->andWhere($tagSubQuery->expr()->in('ctx.tag_id', $filter['value']));
-            // $tagSubQuery->setParameter('filter_value', $filter['value']);
+            $tagSubQuery->andWhere($tagSubQuery->expr()->in(self::COMPANY_TAGS_XREF_PREFIX.'.tag_id', $filter['value']));
         }
 
         if (in_array($filter['condition'], ['in', 'notEmpty'])) {
-            return $tagSubQuery->expr()->in('comp.id', $tagSubQuery->getSQL());
+            return $tagSubQuery->expr()->in(self::COMPANIES_PREFIX.'.id', $tagSubQuery->getSQL());
         } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
-            return $tagSubQuery->expr()->notIn('comp.id', $tagSubQuery->getSQL());
+            return $tagSubQuery->expr()->notIn(self::COMPANIES_PREFIX.'.id', $tagSubQuery->getSQL());
         }
 
         return null;
     }
 
+    /**
+     * @param mixed[] $filter
+     * @param mixed[] $filterDefinitions
+     */
     private function doesColumnSupportEmptyValue(array $filter, array $filterDefinitions): bool
     {
         $type = $filterDefinitions[$filter['column']]['type'] ?? null;
