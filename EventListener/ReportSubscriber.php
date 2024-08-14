@@ -41,8 +41,26 @@ class ReportSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $columns = $this->companyReportData->getCompanyData();
-        unset($columns['companies_lead.is_primary'], $columns['companies_lead.date_added']);
+        $keys = [
+            'comp.id',
+            'comp.companyaddress1',
+            'comp.companyaddress2',
+            'comp.companyemail',
+            'comp.companyphone',
+            'comp.companycity',
+            'comp.companystate',
+            'comp.companyzipcode',
+            'comp.companycountry',
+            'comp.companyname',
+            'comp.companywebsite',
+            'comp.companynumber_of_employees',
+            'comp.companyfax',
+            'comp.companyannual_revenue',
+            'comp.companyindustry',
+            'comp.companydescription',
+        ];
+        $columns         = $this->companyReportData->getCompanyData();
+        $filteredColumns = array_intersect_key($columns, array_flip($keys));
 
         $tagList = $this->getFilterTags();
 
@@ -59,22 +77,17 @@ class ReportSubscriber implements EventSubscriberInterface
             ],
         ],
         ];
-        $filters = array_merge($columns, $tagFilter);
+        $filters = array_merge($filteredColumns, $tagFilter);
 
         $event->addTable(
             self::CONTEXT_COMPANY_TAGS,
             [
                 'display_name' => 'mautic.companytag.report.companytags',
-                'columns'      => $columns,
+                'columns'      => $filteredColumns,
                 'filters'      => $filters,
             ],
             self::COMPANY_TABLE
         );
-
-        $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'line', 'mautic.lead.graph.line.companies');
-        $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'pie', 'mautic.lead.graph.pie.companies.industry');
-        $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'pie', 'mautic.lead.table.pie.company.country');
-        $event->addGraph(self::CONTEXT_COMPANY_TAGS, 'table', 'mautic.lead.company.table.top.cities');
     }
 
     /**

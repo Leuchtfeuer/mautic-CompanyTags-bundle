@@ -92,6 +92,7 @@ class CompanyTagsRepository extends CommonRepository
 
     /**
      * @param array<int>|array{} $ids
+     *
      * @return array<CompanyTags>
      */
     public function getTagObjectsByIds($ids): array
