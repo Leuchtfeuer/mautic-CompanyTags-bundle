@@ -86,4 +86,16 @@ class CompanyTagsRepository extends CommonRepository
 
         return $query->getResult();
     }
+
+    public function getTagObjectsByIds($ids): array
+    {
+        $queryBuilder = $this->createQueryBuilder('t')
+            ->select('t')
+            ->where('t.id IN (:ids)')
+            ->setParameter('ids', $ids);
+
+        $query = $queryBuilder->getQuery();
+        return $query->getResult();
+
+    }
 }
