@@ -78,7 +78,10 @@ class CompanyTagsRepository extends CommonRepository
         return ($returnArray) ? $return : $return[$tagIds[0]];
     }
 
-    public function getAllTagObjects()
+    /**
+     * @return array<CompanyTags>
+     */
+    public function getAllTagObjects(): array
     {
         $query     = $this->createQueryBuilder('t')
             ->select('t')
@@ -87,6 +90,11 @@ class CompanyTagsRepository extends CommonRepository
         return $query->getResult();
     }
 
+    /**
+     * @param array<int>|array{} $ids
+     *
+     * @return array<CompanyTags>
+     */
     public function getTagObjectsByIds($ids): array
     {
         $queryBuilder = $this->createQueryBuilder('t')
@@ -95,7 +103,7 @@ class CompanyTagsRepository extends CommonRepository
             ->setParameter('ids', $ids);
 
         $query = $queryBuilder->getQuery();
-        return $query->getResult();
 
+        return $query->getResult();
     }
 }
