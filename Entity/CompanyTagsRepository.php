@@ -103,6 +103,7 @@ class CompanyTagsRepository extends CommonRepository
             ->setParameter('ids', $ids);
 
         $query = $queryBuilder->getQuery();
+
         return $query->getResult();
     }
 }
