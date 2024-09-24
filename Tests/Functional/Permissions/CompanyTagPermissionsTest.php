@@ -78,7 +78,11 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
         $this->activePlugin();
         $role = $this->registerNewRole('Test Role Company Tag', 'Test Role Description Company Tag', ['viewown', 'viewother']);
         $this->registerNewUser('Test', 'User1', 'test1@test.com', 'testuser1', '123User***321', $role);
-        $this->loginUser('testuser1');
+
+        // Disable the default logging in via username and password.
+        $this->clientServer = [];
+        $this->setUpSymfony($this->configParams);
+        $user = $this->loginUser('testuser1');
         $this->client->setServerParameter('PHP_AUTH_USER', 'testuser1');
         $this->client->setServerParameter('PHP_AUTH_PW', 'mautic');
         $this->client->request('GET', '/s/companies');
