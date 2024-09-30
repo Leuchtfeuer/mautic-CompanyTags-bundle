@@ -6,6 +6,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\PluginBundle\Entity\Integration;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Tests\MauticMysqlTestCase;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
+use Mautic\PluginBundle\Entity\Plugin;
 
 class EntityCompanyTagsTest extends MauticMysqlTestCase
 {

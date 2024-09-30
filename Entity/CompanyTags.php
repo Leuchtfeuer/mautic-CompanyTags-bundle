@@ -3,6 +3,7 @@
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
@@ -163,9 +164,9 @@ class CompanyTags
     }
 
     /**
-     * @return ArrayCollection|array<Company>
+     * @return Collection<int, Company>
      */
-    public function getCompanies(): \Doctrine\Common\Collections\Collection
+    public function getCompanies(): Collection
     {
         return $this->companies;
     }

@@ -24,6 +24,7 @@ class AjaxController extends CommonAjaxController
 {
     use AjaxLookupControllerTrait;
 
+    // @phpstan-ignore-next-line
     public function __construct(
         ManagerRegistry $doctrine,
         MauticFactory $factory,
@@ -101,7 +102,7 @@ class AjaxController extends CommonAjaxController
         }
         $this->companyTagModel->removeCompanyTag($company, $companyTag);
         $tags         = $this->companyTagModel->getRepository()->getTagsByCompany($company);
-        $tagsIdsSaved = array_map(function ($tag) {
+        $tagsIdsSaved = array_map(function ($tag): ?int {
             return $tag->getId();
         }, $tags);
         $data = ['success' => 1];

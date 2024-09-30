@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
 {
+    // @phpstan-ignore-next-line
     public function __construct(
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,

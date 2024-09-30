@@ -32,6 +32,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CompanyController extends CompanyControllerBase
 {
+    // @phpstan-ignore-next-line
     public function __construct(
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,

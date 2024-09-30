@@ -39,10 +39,8 @@ class CampaignSubscriber implements EventSubscriberInterface
         $event->addAction('companytag.changetags', $action);
     }
 
-    /**
-     * @param CampaignExecutionEvent $event
-     */
-    public function onCampaignTriggerAction($event): void
+    // @phpstan-ignore-next-line
+    public function onCampaignTriggerAction(CampaignExecutionEvent $event): void
     {
         if (!$event->checkContext('companytag.changetags')) {
             return;

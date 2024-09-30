@@ -12,6 +12,7 @@ use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Model\RoleModel;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagPermissionsTest extends MauticMysqlTestCase
@@ -183,6 +184,109 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
         $this->client->request('GET', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag', ['companyId' => $company->getId(), 'tagId' => $companies['tags'][0]->getId()]);
         $this->assertSame(Response::HTTP_FORBIDDEN, $this->client->getResponse()->getStatusCode());
         $this->client->request('GET', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:addCompanyTags', ['companyId' => $company->getId(), 'tagId' => $companies['tags'][0]->getId()]);
+        $this->assertSame(Response::HTTP_FORBIDDEN, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testCompanyTagApiAddCompanyTagToCompanySuccess(): void
+    {
+        $companyTags1 = $this->addCompanyTag('CompanyTag2323', 'Description tag 1');
+
+        $company = new Company();
+        $company->setName('Test Company');
+        $this->em->persist($company);
+        $this->em->flush();
+
+        $password = '123User***321';
+        $username = 'testuser10001';
+
+        $user = $this->newUserWithPermission(
+            $username,
+            $password,
+            false,
+            ['companytag:companytags'=> ['view', 'edit']]
+        );
+
+        $this->newLogin($user, $password);
+        $this->client->request(
+            Request::METHOD_POST,
+            "/api/companytags/{$company->getId()}/add",
+            [
+                'tags' => [
+                    $companyTags1->getId(),
+                ],
+            ]
+        );
+
+        $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testCompanyTagApiRemoveCompanyTagFromCompanySuccess(): void
+    {
+        $companyTags1 = $this->addCompanyTag('CompanyTag2323', 'Description tag 1');
+
+        $companies    = $this->addCompany([$companyTags1], 'Test Company');
+        $company      = $companies['company'];
+
+        $password = '123User***321';
+        $username = 'testuser1000';
+
+        $user = $this->newUserWithPermission(
+            $username,
+            $password,
+            false,
+            ['companytag:companytags'=> ['view', 'edit']]
+        );
+
+        $this->newLogin($user, $password);
+        $this->client->request('POST', '/api/companytags/'.$company->getId().'/remove', ['tags' => [$companyTags1->getId()]]);
+        $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testCompanyTagApiAddCompanyTagToCompanyFail(): void
+    {
+        $companyTags1 = $this->addCompanyTag('CompanyTag2323', 'Description tag 1');
+
+        $company = new Company();
+        $company->setName('Test Company');
+        $this->em->persist($company);
+        $this->em->flush();
+
+        $password = '123User***321';
+        $username = 'testuser10003332';
+
+        $user = $this->newUserWithPermission(
+            $username,
+            $password,
+            false,
+            ['companytag:companytags'=> ['view']]
+        );
+
+        $this->newLogin($user, $password);
+        $this->client->request('POST', '/api/companytags/'.$company->getId().'/add', ['tags' => [$companyTags1->getId()]]);
+        $this->assertSame(Response::HTTP_FORBIDDEN, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testCompanyTagApiRemoveCompanyTagFromCompanyFail(): void
+    {
+        $companyTags1 = $this->addCompanyTag('CompanyTag2323', 'Description tag 1');
+
+        $company = new Company();
+        $company->setName('Test Company');
+        $this->em->persist($company);
+        $this->em->flush();
+
+        $password = '123User***321';
+        $username = 'testuser1000';
+
+        $user = $this->newUserWithPermission(
+            $username,
+            $password,
+            false,
+            ['companytag:companytags'=> ['view']]
+        );
+
+        $this->newLogin($user, $password);
+        $this->client->request('POST', '/api/companytags/'.$company->getId().'/remove', ['tags' => [$companyTags1->getId()]]);
         $this->assertSame(Response::HTTP_FORBIDDEN, $this->client->getResponse()->getStatusCode());
     }
 

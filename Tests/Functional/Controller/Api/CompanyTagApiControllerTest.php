@@ -294,4 +294,58 @@ class CompanyTagApiControllerTest extends MauticMysqlTestCase
         $this->assertNull($checkCompanyTag);
         $this->assertNull($response['companytag']['id']);
     }
+
+    public function testAddCompanyTagToCompany(): void
+    {
+        $newCompany = new Company();
+        $newCompany->setName('Test Company 3');
+        $this->em->persist($newCompany);
+        $this->em->flush();
+
+        $companyTag = $this->addTag('Test Company Tag 11', 'Test Company Tag Description 11');
+        $this->client->request(Request::METHOD_POST, "/api/companytags/{$newCompany->getId()}/add", ['tags' => [$companyTag->getId()]]);
+        $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertCount(1, $response['tags']);
+        $this->assertTrue($response['success']);
+        $this->assertSame($companyTag->getTag(), $response['tags'][0]['tag']);
+        $this->assertCount(1, $response['tags'][0]['companies']);
+        $this->assertSame($newCompany->getId(), $response['tags'][0]['companies'][0]['id']);
+    }
+
+    public function testAddCompanyTagToCompanyFailBadRequest(): void
+    {
+        $this->client->request(Request::METHOD_POST, "/api/companytags/{$this->companies[0]->getId()}/add", []);
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testAddCompanyTagToCompanyFailNotFound(): void
+    {
+        $this->client->request(Request::METHOD_POST, "/api/companytags/{$this->companies[0]->getId()}/add", ['tags' => [999, 9999]]);
+        $this->assertSame(Response::HTTP_NOT_FOUND, $this->client->getResponse()->getStatusCode());
+    }
+
+    public function testRemoveCompanyTagFromCompany(): void
+    {
+        $nameCompany  = 'Test Company Remove Tag';
+        $companyTag12 = $this->addTag('Test Company Tag 12', 'Test Company Tag Description 12');
+        $companyTag13 = $this->addTag('Test Company Tag 13', 'Test Company Tag Description 13');
+        $this->addCompany([$companyTag12, $companyTag13], $nameCompany);
+        $company = $this->em->getRepository(Company::class)->findOneBy(['name' => $nameCompany]);
+        $this->client->request(
+            Request::METHOD_POST,
+            "/api/companytags/{$company->getId()}/remove",
+            [
+                'tags' => [
+                    $companyTag12->getId(),
+                ],
+            ]
+        );
+        $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertCount(1, $response['tags']);
+        $this->assertTrue($response['success']);
+        $this->assertSame($companyTag12->getTag(), $response['tags'][0]['tag']);
+        $this->assertCount(0, $response['tags'][0]['companies']);
+    }
 }

@@ -106,8 +106,14 @@ class CompanyTagModel extends FormModel
         foreach ($removeCompanyTags as $tag) {
             $tag->removeCompany($company);
         }
-        $this->saveEntities($addCompanyTags);
-        $this->saveEntities($removeCompanyTags);
+
+        if (!empty($addCompanyTags)) {
+            $this->saveEntities($addCompanyTags);
+        }
+
+        if (!empty($removeCompanyTags)) {
+            $this->saveEntities($removeCompanyTags);
+        }
     }
 
     /**
