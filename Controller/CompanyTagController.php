@@ -24,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
 {
+    // @phpstan-ignore-next-line
     public function __construct(
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,
@@ -57,23 +58,18 @@ class CompanyTagController extends AbstractStandardFormController
         $permissions = $this->security->isGranted(
             [
                 $this->getPermissionBase().':view',
-                $this->getPermissionBase().':viewown',
-                $this->getPermissionBase().':viewother',
                 $this->getPermissionBase().':create',
                 $this->getPermissionBase().':edit',
-                $this->getPermissionBase().':editown',
-                $this->getPermissionBase().':editother',
                 $this->getPermissionBase().':delete',
-                $this->getPermissionBase().':deleteown',
-                $this->getPermissionBase().':deleteother',
                 $this->getPermissionBase().':publish',
-                $this->getPermissionBase().':publishown',
-                $this->getPermissionBase().':publishother',
             ],
             'RETURN_ARRAY',
             null,
             true
         );
+        if (!$permissions[$this->getPermissionBase().':view']) {
+            return $this->accessDenied();
+        }
 
         if (!$this->checkActionPermission('index')) {
             return $this->accessDenied();
@@ -109,10 +105,6 @@ class CompanyTagController extends AbstractStandardFormController
                     ],
                 ],
             ];
-        }
-
-        if (!$permissions[$this->getPermissionBase().':viewother']) {
-            $filter['force'][] = ['column' => $repo->getTableAlias().'.createdBy', 'expr' => 'eq', 'value' => $this->user->getId()];
         }
 
         $orderBy    = $session->get('mautic.'.$this->getSessionBase().'.orderby', $repo->getTableAlias().'.'.$this->getDefaultOrderColumn());
@@ -236,36 +228,14 @@ class CompanyTagController extends AbstractStandardFormController
     /**
      * @return RedirectResponse|JsonResponse|array<mixed>|Response
      */
-    public function viewAction(Request $request, int $objectId): RedirectResponse|JsonResponse|array|Response
+    public function viewAction(Request $request, ?int $objectId): RedirectResponse|JsonResponse|array|Response
     {
-        $security = $this->security;
-        $tag      = $this->companyTagModel->getEntity($objectId);
-
-        // set the page we came from
-        $page = $request->getSession()->get('mautic.tagmanager.page', 1);
-        if (null === $tag) {
-            // set the return URL
-            $returnUrl = $this->generateUrl('mautic_tagmanager_index', ['page' => $page]);
-
-            return $this->postActionRedirect([
-                'returnUrl'       => $returnUrl,
-                'viewParameters'  => ['page' => $page],
-                'contentTemplate' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::indexAction',
-                'passthroughVars' => [
-                    'activeLink'    => '#mautic_companytag_index',
-                    'mauticContent' => 'companytag',
-                ],
-                'flashes' => [
-                    [
-                        'type'    => 'error',
-                        'msg'     => 'mautic.companytag.tag.error.notfound',
-                        'msgVars' => ['%id%' => $objectId],
-                    ],
-                ],
-            ]);
-        } elseif (!$this->security->isGranted('companytag:companytags:view')) {
+        if (!$this->security->isGranted('companytag:companytags:view')) {
             return $this->accessDenied();
         }
+
+        $security = $this->security;
+        $tag      = $this->companyTagModel->getEntity($objectId);
 
         return $this->delegateView([
             'returnUrl'      => $this->generateUrl('mautic_companytag_action', ['objectAction' => 'view', 'objectId' => $tag->getId()]),

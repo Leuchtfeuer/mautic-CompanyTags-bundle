@@ -18,7 +18,7 @@ class ReportSubscriber implements EventSubscriberInterface
     public const COMPANY_TAGS_XREF_PREFIX = 'ctx';
     public const COMPANY_TABLE            = 'companies';
     public const COMPANIES_PREFIX         = 'comp';
-    public const COMPANY_TAGS_XREF_TABLE  = 'companies_tags_xref';
+    public const COMPANY_TAGS_XREF_TABLE  = 'companies_companies_tags_xref';
 
     public function __construct(
         private CompanyReportData $companyReportData,

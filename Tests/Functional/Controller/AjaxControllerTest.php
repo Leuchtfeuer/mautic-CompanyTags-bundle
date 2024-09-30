@@ -16,9 +16,12 @@ class AjaxControllerTest extends MauticMysqlTestCase
     public const TAG_ONE_DESC = 'Description tag 1';
     public const TAG_TWO_DESC = 'Description tag 2';
 
-    private $tags;
+    /**
+     * @var array<int, CompanyTags>
+     */
+    private array $tags;
 
-    private $company;
+    private Company $company;
 
     public function setUp(): void
     {
@@ -31,7 +34,7 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $this->company = $this->addCompany($this->tags);
     }
 
-    public function testRemoveCompanyCompanyTag()
+    public function testRemoveCompanyCompanyTag(): void
     {
         $this->client->request('GET', '/s/companies/view/'.$this->company->getId());
         $this->assertStringContainsString(self::TAG_ONE, $this->client->getResponse()->getContent());
@@ -39,7 +42,7 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $tags = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($this->company);
         $this->assertCount(2, $tags);
         $newCompany = $this->em->getRepository(Company::class)->find($this->company->getId());
-        $this->client->request('POST', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag', ['companyId' => $this->company->getId(), 'tagId' => $tags[0]->getId()]);
+        $this->client->request('POST', '/s/ajax?action=plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag', ['companyId' => $newCompany->getId(), 'tagId' => $tags[0]->getId()]);
         $this->assertSame(200, $this->client->getResponse()->getStatusCode());
         $this->assertStringContainsString('{"success":1}', $this->client->getResponse()->getContent());
         $tags = $this->em->getRepository(CompanyTags::class)->getTagsByCompany($this->company);
@@ -63,6 +66,9 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $this->em->flush();
     }
 
+    /**
+     * @return array<int, CompanyTags>
+     */
     private function addCompanyTags(): array
     {
         $crawler                                       = $this->client->request('GET', '/s/companytag/new');
@@ -86,25 +92,17 @@ class AjaxControllerTest extends MauticMysqlTestCase
         $companyTag1 = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => self::TAG_ONE]);
         $companyTag2 = $this->em->getRepository(CompanyTags::class)->findOneBy(['tag' => self::TAG_TWO]);
 
-        //        $companyTag1 = new CompanyTags();
-        //        $companyTag1->setTag(self::TAG_ONE. rand(1, 1000000));
-        //        $companyTag1->setDescription('Description tag 1');
-        //        $this->em->persist($companyTag1);
-        //        $this->em->flush();
-        //        $companyTag2 = new CompanyTags();
-        //        $companyTag2->setTag(self::TAG_TWO. rand(1, 1000000));
-        //        $this->em->persist($companyTag2);
-        //        $this->em->flush();
-
         return [
             $companyTag1,
             $companyTag2,
         ];
     }
 
-    private function addCompany($tags=[]): Company
+    /**
+     * @param array<int, CompanyTags> $tags
+     */
+    private function addCompany(array $tags=[]): Company
     {
-        //        $tags                                = $this->addCompanyTags();
         $random                              = rand(1, 1000000);
         $name                                = 'Test Company '.$random;
         $crawler                             = $this->client->request('GET', '/s/companies/new');

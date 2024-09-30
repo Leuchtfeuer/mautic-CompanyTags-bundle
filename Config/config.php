@@ -59,11 +59,11 @@ return [
         'main' => [
             'mautic_companytag_index' => [
                 'path'       => '/companytag',
-                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController:indexAction',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::indexAction',
             ],
             'mautic_companytag_action' => [
                 'path'       => '/companytag/{objectAction}/{objectId}',
-                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController:executeAction',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::executeAction',
             ],
             'mautic_company_index' => [
                 'path'       => '/companies/{page}',
@@ -72,6 +72,24 @@ return [
             'mautic_company_action' => [
                 'path'       => '/companies/{objectAction}/{objectId}',
                 'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::executeAction',
+            ],
+        ],
+        'api'  => [
+            'mautic_api_companytags' => [
+                'standard_entity' => true,
+                'name'            => 'companytags',
+                'path'            => '/companytags',
+                'controller'      => MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\Api\CompanyTagApiController::class,
+            ],
+            'mauitc_api_companytags_add_companytag_to_company' => [
+                'path'       => '/companytags/{companyId}/add',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\Api\CompanyTagApiController::addCompanyTagToCompanyAction',
+                'method'     => 'POST',
+            ],
+            'mauitc_api_companytags_remove_companytag_from_company' => [
+                'path'       => '/companytags/{companyId}/remove',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\Api\CompanyTagApiController::removeCompanyTagFromCompanyAction',
+                'method'     => 'POST',
             ],
         ],
     ],
