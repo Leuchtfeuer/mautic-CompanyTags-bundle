@@ -7,7 +7,7 @@ use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 
-class CompanyTagsTest extends MauticMysqlTestCase
+class CompanyTagsControllerTest extends MauticMysqlTestCase
 {
     public function setUp(): void
     {
@@ -17,16 +17,14 @@ class CompanyTagsTest extends MauticMysqlTestCase
         $this->setUpSymfony($this->configParams);
     }
 
-    public function testNewViewAction()
+    public function testNewViewAction(): void
     {
-        $this->activePlugin();
         $this->client->request('GET', '/s/companytag/new');
         $this->assertResponseStatusCodeSame(200);
     }
 
-    public function testNewAction()
+    public function testNewAction(): void
     {
-        $this->activePlugin();
         $crawler                                       = $this->client->request('GET', '/s/companytag/new');
         $form                                          = $crawler->filter('form[name=company_tag_entity]')->form();
         $formValues                                    = $form->getValues();
@@ -38,9 +36,8 @@ class CompanyTagsTest extends MauticMysqlTestCase
         $this->assertStringContainsString('Test Tag', $this->client->getResponse()->getContent());
     }
 
-    public function testNewAndDelete()
+    public function testNewAndDelete(): void
     {
-        $this->activePlugin();
         $crawler                                       = $this->client->request('GET', '/s/companytag/new');
         $form                                          = $crawler->filter('form[name=company_tag_entity]')->form();
         $formValues                                    = $form->getValues();
@@ -56,9 +53,8 @@ class CompanyTagsTest extends MauticMysqlTestCase
         $this->assertEmpty($companyTag);
     }
 
-    public function testNewEditAction()
+    public function testNewEditAction(): void
     {
-        $this->activePlugin();
         $crawler                                       = $this->client->request('GET', '/s/companytag/new');
         $form                                          = $crawler->filter('form[name=company_tag_entity]')->form();
         $formValues                                    = $form->getValues();

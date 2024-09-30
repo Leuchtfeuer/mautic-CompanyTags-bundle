@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 class CompanyTagModel extends FormModel
 {
-    public function getRepository(): \Doctrine\ORM\EntityRepository|\MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
+    public function getRepository(): \MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTagsRepository
     {
         return $this->em->getRepository(CompanyTags::class);
     }
@@ -30,7 +30,7 @@ class CompanyTagModel extends FormModel
         return parent::getEntity($id);
     }
 
-    public function getPermissionBase()
+    public function getPermissionBase(): string
     {
         return 'companytag:companytags';
     }
@@ -42,8 +42,6 @@ class CompanyTagModel extends FormModel
      * @param \Symfony\Component\Form\FormFactory $formFactory
      * @param null                                $action
      * @param array<mixed>                        $options
-     *
-     * @throws NotFoundHttpException
      */
     public function createForm($entity, $formFactory, $action = null, $options = []): FormInterface
     {
@@ -51,32 +49,13 @@ class CompanyTagModel extends FormModel
             throw new MethodNotAllowedHttpException(['CompanyTags']);
         }
 
-        if (!empty($action)) {
-            $options['action'] = $action;
-        }
-
         return $formFactory->create(CompanyTagEntityType::class, $entity, $options);
-    }
-
-    public function addCompanyTag(Company $company, CompanyTags $companyTags): void
-    {
-        $qb = $this->em->getConnection()->createQueryBuilder();
-        $qb->insert(MAUTIC_TABLE_PREFIX.'companies_tags_xref')
-            ->values(
-                [
-                    'company_id' => ':company_id',
-                    'tag_id'     => ':tag_id',
-                ]
-            )
-            ->setParameter('company_id', $company->getId())
-            ->setParameter('tag_id', $companyTags->getId());
-        $qb->executeQuery();
     }
 
     public function removeCompanyTag(Company $company, CompanyTags $companyTags): void
     {
         $qb = $this->em->getConnection()->createQueryBuilder();
-        $qb->delete(MAUTIC_TABLE_PREFIX.'companies_tags_xref')
+        $qb->delete(MAUTIC_TABLE_PREFIX.'companies_companies_tags_xref')
             ->where('company_id = :company_id')
             ->andWhere('tag_id = :tag_id')
             ->setParameter('company_id', $company->getId())
@@ -84,11 +63,16 @@ class CompanyTagModel extends FormModel
         $qb->executeQuery();
     }
 
+    /**
+     * @param array<string> $tagIds
+     *
+     * @return array<int>
+     */
     public function getCompaniesIdByTags(array $tagIds): array
     {
         $qb = $this->em->getConnection()->createQueryBuilder();
         $qb->select('ctx.company_id')
-            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx')
+            ->from(MAUTIC_TABLE_PREFIX.'companies_companies_tags_xref', 'ctx')
             ->where(
                 $qb->expr()->in('ctx.tag_id', $tagIds)
             );
@@ -117,15 +101,13 @@ class CompanyTagModel extends FormModel
         }
 
         foreach ($addCompanyTags as $tag) {
-            $this->addCompanyTag($company, $tag);
-        }
-
-        if (empty($removeCompanyTags)) {
-            return;
+            $tag->addCompany($company);
         }
         foreach ($removeCompanyTags as $tag) {
-            $this->removeCompanyTag($company, $tag);
+            $tag->removeCompany($company);
         }
+        $this->saveEntities($addCompanyTags);
+        $this->saveEntities($removeCompanyTags);
     }
 
     /**
@@ -138,7 +120,7 @@ class CompanyTagModel extends FormModel
         $qb = $this->em->getConnection()->createQueryBuilder();
 
         $qb->select('ctx.tag_id')
-            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx')
+            ->from(MAUTIC_TABLE_PREFIX.'companies_companies_tags_xref', 'ctx')
             ->where('ctx.company_id = :company_id')
             ->setParameter('company_id', $company->getId());
 

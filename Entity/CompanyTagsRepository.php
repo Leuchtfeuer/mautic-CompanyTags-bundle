@@ -8,12 +8,13 @@ use Mautic\LeadBundle\Entity\Tag;
 
 class CompanyTagsRepository extends CommonRepository
 {
-    public function getTagByNameOrCreateNewOne($name= null): CompanyTags
+    public function getTagByNameOrCreateNewOne(string $name= null): CompanyTags
     {
         if (empty($name)) {
             return new CompanyTags();
         }
-        $companyTag = new CompanyTags($name, true);
+        $companyTag = new CompanyTags();
+        $companyTag->setTag($name);
 
         /** @var CompanyTags|null $existingTag */
         $existingTag = $this->findOneBy(
@@ -25,6 +26,11 @@ class CompanyTagsRepository extends CommonRepository
         return $existingTag ?? $companyTag;
     }
 
+    /**
+     * Get tags by company.
+     *
+     * @return array<CompanyTags>
+     */
     public function getTagsByCompany(Company $company): array
     {
         $companyId = $company->getId();
@@ -39,7 +45,8 @@ class CompanyTagsRepository extends CommonRepository
     }
 
     /**
-     * Get a count of leads that belong to the tag.
+     * @param array<string> $tagIds
+     *                              Get a count of leads that belong to the tag
      *
      * @return array<int, int>|int
      */
@@ -48,7 +55,7 @@ class CompanyTagsRepository extends CommonRepository
         $q = $this->getEntityManager()->getConnection()->createQueryBuilder();
 
         $q->select('count(ctx.company_id) as thecount, ctx.tag_id')
-            ->from(MAUTIC_TABLE_PREFIX.'companies_tags_xref', 'ctx');
+            ->from(MAUTIC_TABLE_PREFIX.'companies_companies_tags_xref', 'ctx');
 
         $returnArray = is_array($tagIds);
 
@@ -105,5 +112,22 @@ class CompanyTagsRepository extends CommonRepository
         $query = $queryBuilder->getQuery();
 
         return $query->getResult();
+    }
+
+    public function getEntity($id = 0): ?CompanyTags
+    {
+        try {
+            $q = $this->createQueryBuilder($this->getTableAlias());
+            $q->select('e,c');
+            $q->where($this->getTableAlias().'.id = :id')
+                ->setParameter('id', (int) $id)
+                ->leftJoin($this->getTableAlias().'.companies', 'c');
+
+            return $q->getQuery()->getSingleResult();
+        } catch (\Exception) {
+            $entity = null;
+        }
+
+        return $entity;
     }
 }

@@ -7,6 +7,7 @@ use Mautic\LeadBundle\Entity\Company;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 
 class CompanyControllerTest extends MauticMysqlTestCase
 {
@@ -20,13 +21,10 @@ class CompanyControllerTest extends MauticMysqlTestCase
     {
         parent::setUp();
         $this->activePlugin();
-        $this->useCleanupRollback = false;
-        $this->setUpSymfony($this->configParams);
     }
 
     public function testIndexAction(): void
     {
-        $this->activePlugin();
         $this->client->request('GET', '/s/companytag');
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString('Company Tags', $this->client->getResponse()->getContent());
@@ -35,15 +33,13 @@ class CompanyControllerTest extends MauticMysqlTestCase
 
     public function testCheckFieldCompanyTags(): void
     {
-        $this->activePlugin();
         $this->client->request('GET', '/s/companies/new');
         $this->assertResponseStatusCodeSame(200);
         $this->assertStringContainsString('Company Tags', $this->client->getResponse()->getContent());
     }
 
-    public function testSaveNewAction($name='Test Company'): void
+    public function testSaveNewAction(string $name='Test Company'): void
     {
-        $this->activePlugin();
         $tags                                = $this->addCompanyTags();
         $crawler                             = $this->client->request('GET', '/s/companies/new');
         $form                                = $crawler->filter('form[name=company]')->form();
@@ -67,7 +63,6 @@ class CompanyControllerTest extends MauticMysqlTestCase
 
     public function testEditAction(): void
     {
-        $this->activePlugin();
         $this->testSaveNewAction('Test Company 22');
         $newName           = 'Test Company 22aaa';
         $companyEntity     = $this->em->getRepository(Company::class)->findOneBy(['name' => 'Test Company 22'], ['id' => 'DESC']);
@@ -91,7 +86,6 @@ class CompanyControllerTest extends MauticMysqlTestCase
 
     public function testFieldCompanyTagsIsWorking(): void
     {
-        $this->activePlugin();
         $name = 'Test Company 5555';
         $this->testSaveNewAction($name);
         $companyEntity     = $this->em->getRepository(Company::class)->findOneBy(['name' => $name], ['id' => 'DESC']);
@@ -111,6 +105,8 @@ class CompanyControllerTest extends MauticMysqlTestCase
     }
 
     /**
+     * @param array<string> $tags
+     *
      * @return array<CompanyTags>
      *
      * @throws \Doctrine\ORM\Exception\ORMException
@@ -149,22 +145,20 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->em->getRepository(Integration::class)->saveEntity($integration);
         $this->em->persist($integration);
         $this->em->flush();
+        $this->useCleanupRollback = false;
+        $this->setUpSymfony($this->configParams);
     }
 
-    public function testResearchBySameTagInTwoCompanies()
+    public function testResearchBySameTagInTwoCompanies(): void
     {
-        $this->activePlugin();
         $tags                                = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
         // Set one Company with two tags
         $this->registerCompany('Test Company View List', 'test@test.com', [$tags[0]->getId(), $tags[1]->getId()]);
-        $this->assertStringContainsString('Edit Company Test Company View List', $this->client->getResponse()->getContent());
         // Set one Company with one other tag already set
         $this->registerCompany('Fee Lee Company', 'test1@test.com', [$tags[0]->getId()]);
-        $this->assertStringContainsString('Edit Company Fee Lee Company', $this->client->getResponse()->getContent());
 
         // Set one Company with no tags
         $this->registerCompany('Dee Gee Company', 'test1@test.com');
-        $this->assertStringContainsString('Edit Company Dee Gee Company', $this->client->getResponse()->getContent());
 
         // Search for tree companies listed
         $crawler  = $this->client->request('GET', '/s/companies');
@@ -180,35 +174,30 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString('Fee Lee Company', $this->client->getResponse()->getContent());
     }
 
-    public function testCheckContatcsNumberIncompanyTagsPage()
+    public function testCheckContatcsNumberIncompanyTagsPage(): void
     {
-        $this->activePlugin();
         $tags                                = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
-        //        dump($tags);
         // Set one Company with two tags
-        $this->registerCompany('Test Company View List', 'test@test.com', [$tags[0]->getId(), $tags[1]->getId()]);
+        $this->registerFunctionalCompany('Test Company View List', 'test@test.com', [$tags[0]->getId(), $tags[1]->getId()]);
         $this->assertStringContainsString('Edit Company Test Company View List', $this->client->getResponse()->getContent());
 
         // Set one Company with one other tag already set
-        $this->registerCompany('Fee Lee Company', 'test1@test.com', [$tags[0]->getId()]);
+        $this->registerFunctionalCompany('Fee Lee Company', 'test1@test.com', [$tags[0]->getId()]);
         $this->assertStringContainsString('Edit Company Fee Lee Company', $this->client->getResponse()->getContent());
 
-        $crawler = $this->client->request('GET', '/s/companytag');
+        $this->client->request('GET', '/s/companytag');
         $this->assertStringContainsString('View 2 Companies', $this->client->getResponse()->getContent());
         $this->assertStringContainsString('View 1 Company', $this->client->getResponse()->getContent());
     }
 
-    public function testResearchBySameTagInOneCompany()
+    public function testResearchBySameTagInOneCompany(): void
     {
-        $this->activePlugin();
         $tags = $this->addCompanyTags(['tagTest1', 'tagTest2', 'tagTest3', 'tagTest4']);
 
         // Set one Company with one other tags
         $this->registerCompany('Foo Baa Company', 'test1@test.com', [$tags[2]->getId()]);
-        $this->assertStringContainsString('Edit Company Foo Baa Company', $this->client->getResponse()->getContent());
         // Set one Company with no tags
-        $this->registerCompany('Dee Gee Company', 'test1@test.com');
-        $this->assertStringContainsString('Edit Company Dee Gee Company', $this->client->getResponse()->getContent());
+        $this->registerCompany('Dee Gee Company', 'test12@test.com');
         // Search for tree companies listed
         $crawler                         = $this->client->request('GET', '/s/companies?search=');
         $numberOfTrInCompanyListTable    = $crawler->filter('table[id=companyTable]')->filter('tr')->count();
@@ -219,9 +208,8 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString('Foo Baa Company', $this->client->getResponse()->getContent());
     }
 
-    public function testResearchByNameDontExist()
+    public function testResearchByNameDontExist(): void
     {
-        $this->activePlugin();
         $tags = $this->addCompanyTags(['tagTest1']);
         // Set one Company with one other tags
         $this->registerCompany('Foo Baa Company', 'test1@test.com', [$tags[0]->getId()]);
@@ -230,7 +218,36 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertSame(0, $numberOfTrInCompanyListTable);
     }
 
-    private function registerCompany($companyName, $companyEmail, $tags=[])
+    /**
+     * @param array<int> $tags
+     *
+     * @throws \Doctrine\ORM\Exception\NotSupported
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    private function registerCompany(string $companyName, string $companyEmail, array $tags=[]): Company
+    {
+        $company = new Company();
+        $company->setName($companyName);
+        $company->setEmail($companyEmail);
+        $company->setScore(0);
+        $this->em->persist($company);
+        $this->em->flush();
+        if (!empty($tags)) {
+            $companyTag = static::getContainer()->get(CompanyTagModel::class);
+            $tags       = $this->em->getRepository(CompanyTags::class)->findBy(['id' => $tags]);
+            $companyTag->updateCompanyTags($company, $tags);
+        }
+
+        return $company;
+    }
+
+    /**
+     * @param array<int> $tags
+     *
+     * @throws \Doctrine\ORM\Exception\NotSupported
+     */
+    protected function registerFunctionalCompany(string $companyName, string $companyEmail, array $tags = []): Company
     {
         $crawler                             = $this->client->request('GET', '/s/companies/new');
         $form                                = $crawler->filter('form[name=company]')->form();
@@ -243,12 +260,15 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $form->setValues($formValues);
         $this->client->submit($form);
         $this->assertResponseStatusCodeSame(200);
+        $company = $this->em->getRepository(Company::class)->findOneBy(['name' => $companyName], ['id' => 'DESC']);
+
+        return $company;
     }
 
-    public function testIfJsonIsReturned()
+    public function testIfJsonIsReturned(): void
     {
-        $this->activePlugin();
-        $this->registerCompany('Dee Gee Company', 'test2@test.com');
+        $company = $this->registerCompany('Dee Gee Company', 'test2@test.com');
+        $this->client->request('GET', '/s/company/view/'.$company->getId());
         $this->assertStringContainsString('LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js', $this->client->getResponse()->getContent());
     }
 }

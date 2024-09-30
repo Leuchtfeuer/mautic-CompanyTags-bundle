@@ -39,7 +39,10 @@ class CampaignSubscriber implements EventSubscriberInterface
         $event->addAction('companytag.changetags', $action);
     }
 
-    public function onCampaignTriggerAction(CampaignExecutionEvent $event): void
+    /**
+     * @param CampaignExecutionEvent $event
+     */
+    public function onCampaignTriggerAction($event): void
     {
         if (!$event->checkContext('companytag.changetags')) {
             return;
@@ -73,7 +76,5 @@ class CampaignSubscriber implements EventSubscriberInterface
         if ($company instanceof Company && (!empty($tagsToAdd) || !empty($tagsToRemove))) {
             $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
         }
-
-        return;
     }
 }

@@ -155,7 +155,7 @@ class CompanyController extends CompanyControllerBase
     /**
      * @return array<mixed>
      */
-    private function filterByCompanyTag($search): array
+    private function filterByCompanyTag(string $search): array
     {
         $defaultFilter = ['string' => $search, 'force' => []];
         if (!str_contains($search, 'tag:')) {
@@ -260,7 +260,7 @@ class CompanyController extends CompanyControllerBase
             $action,
             ['fields' => $fields, 'update_select' => $updateSelect]
         );
-        $companyTagsStructure = $this->customFormCompanyTags($request, 'edit', $entity);
+        $companyTagsStructure = $this->customFormCompanyTags($request, $entity);
 
         // /Check for a submitted form and process it
         if (!$ignorePost && 'POST' === $method) {
@@ -416,7 +416,7 @@ class CompanyController extends CompanyControllerBase
         $viewParameters       = ['page' => $page];
         $returnUrl            = $this->generateUrl('mautic_company_index', $viewParameters);
         $template             = 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::indexAction';
-        $companyTagsStructure = $this->customFormCompanyTags($request, 'new', $entity);
+        $companyTagsStructure = $this->customFormCompanyTags($request, $entity);
 
         // /Check for a submitted form and process it
         if ('POST' === $request->getMethod()) {
@@ -522,20 +522,6 @@ class CompanyController extends CompanyControllerBase
         );
     }
 
-    private function saveCompanyTags(Request $request, Company $entity)
-    {
-        $companyTagsStructure = $this->customFormCompanyTags($request, 'new', $entity);
-
-        if (!empty($companyTagsStructure['entitiesToAdd']) || !empty($companyTagsStructure['entitiesToRemove'])) {
-            $this->companyTagModel->updateCompanyTags($entity, $companyTagsStructure['entitiesToAdd'], $companyTagsStructure['entitiesToRemove']);
-            $this->addFlashMessage('mautic.companytag.form.create');
-
-            return true;
-        }
-
-        return false;
-    }
-
     /**
      * @param int $objectId
      *
@@ -636,7 +622,7 @@ class CompanyController extends CompanyControllerBase
     /**
      * @return array<string, mixed>
      */
-    private function customFormCompanyTags(Request $request, string $objectAction, Company $company): array
+    private function customFormCompanyTags(Request $request, Company $company): array
     {
         $requestData = [];
         if ($request->request->has('custom_company')) {

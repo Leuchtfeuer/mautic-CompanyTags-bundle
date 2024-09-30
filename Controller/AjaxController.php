@@ -43,6 +43,10 @@ class AjaxController extends CommonAjaxController
 
     public function addCompanyTagsAction(Request $request): JsonResponse
     {
+        if (!$this->security->isGranted('companytag:companytags:edit')) {
+            return $this->accessDenied();
+        }
+
         $tags = $request->request->get('tags');
         $tags = json_decode($tags, true);
 
@@ -81,6 +85,10 @@ class AjaxController extends CommonAjaxController
 
     public function removeCompanyCompanyTagAction(Request $request): JsonResponse
     {
+        if (!$this->security->isGranted('companytag:companytags:edit')) {
+            return $this->accessDenied();
+        }
+
         $tagId        = (int) InputHelper::clean($request->request->get('tagId'));
         $companyTagId = (int) InputHelper::clean($request->request->get('companyId'));
         if (!$tagId || !$companyTagId) {
