@@ -4,6 +4,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\EventListener;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\LeadBundle\Model\CompanyReportData;
 use Mautic\ReportBundle\Event\ReportBuilderEvent;
@@ -64,7 +65,8 @@ class ReportSubscriber implements EventSubscriberInterface
 
         $tagList = $this->getFilterTags();
 
-        $tagFilter = [self::COMPANY_TAGS_XREF_PREFIX.'.tag_id' => [
+        $filters                                           = $filteredColumns;
+        $filters[self::COMPANY_TAGS_XREF_PREFIX.'.tag_id'] = [
             'alias'     => 'companytags',
             'label'     => 'mautic.companytag.report.companytags',
             'type'      => 'select',
@@ -75,9 +77,7 @@ class ReportSubscriber implements EventSubscriberInterface
                 'empty'    => 'mautic.core.operator.isempty',
                 'notEmpty' => 'mautic.core.operator.isnotempty',
             ],
-        ],
         ];
-        $filters = array_merge($filteredColumns, $tagFilter);
 
         $event->addTable(
             self::CONTEXT_COMPANY_TAGS,
@@ -86,7 +86,7 @@ class ReportSubscriber implements EventSubscriberInterface
                 'columns'      => $filteredColumns,
                 'filters'      => $filters,
             ],
-            self::COMPANY_TABLE
+            'companies'
         );
     }
 
@@ -121,16 +121,14 @@ class ReportSubscriber implements EventSubscriberInterface
 
         $expr     = $qb->expr();
 
-        if (count($filters)) {
+        if (count($filters) > 0) {
             foreach ($filters as $i => $filter) {
                 $exprFunction = $filter['expr'] ?? $filter['condition'];
                 $paramName    = sprintf('i%dc%s', $i, InputHelper::alphanum($filter['column']));
 
                 if (array_key_exists('glue', $filter) && 'or' === $filter['glue']) {
-                    if ($andGroup) {
-                        $orGroups[] = CompositeExpression::and(...$andGroup);
-                        $andGroup   = [];
-                    }
+                    $orGroups[] = CompositeExpression::and(...$andGroup);
+                    $andGroup   = [];
                 }
 
                 $companyTagCondition = $this->getCompanyTagCondition($filter);
@@ -161,6 +159,7 @@ class ReportSubscriber implements EventSubscriberInterface
                         $columnValue = ":$paramName";
                         $expression  = $qb->expr()->or(
                             $qb->expr()->isNull($filter['column']),
+                            /** @phpstan-ignore-next-line */
                             $qb->expr()->$exprFunction($filter['column'], $columnValue)
                         );
                         $qb->setParameter($paramName, $filter['value']);
@@ -226,16 +225,17 @@ class ReportSubscriber implements EventSubscriberInterface
                             default:
                                 $qb->setParameter($paramName, $filter['value']);
                         }
+                        /** @phpstan-ignore-next-line */
                         $andGroup[] = $expr->{$exprFunction}($filter['column'], $columnValue);
                 }
             }
         }
 
-        if ($orGroups) {
+        if (boolval($orGroups)) {
             // Add the remaining $andGroup to the rest of the $orGroups if exists so we don't miss it.
             $orGroups[] = CompositeExpression::and(...$andGroup);
             $qb->andWhere(CompositeExpression::or(...$orGroups));
-        } elseif ($andGroup) {
+        } elseif (boolval($andGroup)) {
             $qb->andWhere(CompositeExpression::and(...$andGroup));
         }
 
@@ -247,25 +247,47 @@ class ReportSubscriber implements EventSubscriberInterface
      */
     public function getCompanyTagCondition(array $filter): ?string
     {
-        if (self::COMPANY_TAGS_XREF_PREFIX.'.tag_id' !== $filter['column']) {
+        if (!$this->checkIfCompanyTagFilter($filter)) {
             return null;
         }
 
-        $tagSubQuery = $this->db->createQueryBuilder();
-        $tagSubQuery->select('DISTINCT '.self::COMPANY_TAGS_XREF_PREFIX.'.company_id')
-            ->from(MAUTIC_TABLE_PREFIX.self::COMPANY_TAGS_XREF_TABLE, self::COMPANY_TAGS_XREF_PREFIX);
+        $tagSubQuery = $this->prepareTagSubQuery();
 
+        return $this->finalizeSubQuery($tagSubQuery, $filter);
+    }
+
+    /**
+     * @param array<string, string|null> $filter
+     */
+    private function checkIfCompanyTagFilter(array $filter): bool
+    {
+        return self::COMPANY_TAGS_XREF_PREFIX.'.tag_id' === $filter['column'];
+    }
+
+    private function prepareTagSubQuery(): QueryBuilder
+    {
+        return $this->db->createQueryBuilder()->select('DISTINCT '.self::COMPANY_TAGS_XREF_PREFIX.'.company_id')
+            ->from(MAUTIC_TABLE_PREFIX.self::COMPANY_TAGS_XREF_TABLE, self::COMPANY_TAGS_XREF_PREFIX);
+    }
+
+    /**
+     * @param array<string, string|null> $filter
+     */
+    private function finalizeSubQuery(QueryBuilder $tagSubQuery, array $filter): string
+    {
         if (in_array($filter['condition'], ['in', 'notIn']) && !empty($filter['value'])) {
             $tagSubQuery->andWhere($tagSubQuery->expr()->in(self::COMPANY_TAGS_XREF_PREFIX.'.tag_id', $filter['value']));
         }
 
-        if (in_array($filter['condition'], ['in', 'notEmpty'])) {
-            return $tagSubQuery->expr()->in(self::COMPANIES_PREFIX.'.id', $tagSubQuery->getSQL());
-        } elseif (in_array($filter['condition'], ['notIn', 'empty'])) {
-            return $tagSubQuery->expr()->notIn(self::COMPANIES_PREFIX.'.id', $tagSubQuery->getSQL());
+        $subQuery = $tagSubQuery->getSQL();
+
+        if (in_array($filter['condition'], ['in', 'notEmpty'], true)) {
+            return $tagSubQuery->expr()->in(self::COMPANIES_PREFIX.'.id', '('.$subQuery.')');
+        } elseif (in_array($filter['condition'], ['notIn', 'empty'], true)) {
+            return $tagSubQuery->expr()->notIn(self::COMPANIES_PREFIX.'.id', '('.$subQuery.')');
         }
 
-        return null;
+        throw new \InvalidArgumentException('Invalid filter condition');
     }
 
     /**
