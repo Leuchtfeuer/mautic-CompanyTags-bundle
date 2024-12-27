@@ -7,10 +7,13 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 class CompanyTagPermissions extends AbstractPermissions
 {
-    public function __construct($params)
+    /**
+     * @param array<mixed> $params
+     */
+    public function __construct(array $params)
     {
         parent::__construct($params);
-        $this->addExtendedPermissions('companytags');
+        $this->addStandardPermissions(['companytags']);
     }
 
     public function getName(): string
@@ -24,6 +27,6 @@ class CompanyTagPermissions extends AbstractPermissions
      */
     public function buildForm(FormBuilderInterface &$builder, array $options, array $data): void
     {
-        $this->addExtendedFormFields('companytag', 'companytags', $builder, $data);
+        $this->addStandardFormFields('companytag', 'companytags', $builder, $data);
     }
 }

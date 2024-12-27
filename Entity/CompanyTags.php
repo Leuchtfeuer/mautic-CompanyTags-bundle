@@ -3,27 +3,34 @@
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Mautic\ApiBundle\Serializer\Driver\ApiMetadataDriver;
 use Mautic\CoreBundle\Doctrine\Mapping\ClassMetadataBuilder;
+use Mautic\CoreBundle\Entity\FormEntity;
 use Mautic\CoreBundle\Helper\InputHelper;
 use Mautic\LeadBundle\Entity\Company;
 use Symfony\Component\Validator\Mapping\ClassMetadata as ValidatorClassMetadata;
 
-// class CompanyTags extends CommonEntity
+// class CompanyTags extends FormEntity
 class CompanyTags
 {
-    private $id;
-    private ?string $tag;
+    private ?int $id     = null;
+    private ?string $tag = null;
+
+    /**
+     * @var ArrayCollection<int, Company>
+     */
     private $companies;
 
     private ?string $description = null;
 
-    public function __construct(string $tag = null, bool $clean = true)
+    public ?int $deletedId;
+
+    public function __construct()
     {
-        $this->tag            = $clean && $tag ? $this->validateTag($tag) : $tag;
-        $this->loadCompanies();
+        $this->companies = new ArrayCollection();
     }
 
     public static function loadMetadata(ClassMetadata $metadata): void
@@ -41,7 +48,7 @@ class CompanyTags
             ->build();
 
         $builder->createManyToMany('companies', Company::class)
-            ->setJoinTable('companies_tags_xref')
+            ->setJoinTable('companies_companies_tags_xref')
             ->setIndexBy('id')
             ->addInverseJoinColumn('company_id', 'id', false, false, 'CASCADE')
             ->addJoinColumn('tag_id', 'id', false, false, 'CASCADE')
@@ -62,7 +69,7 @@ class CompanyTags
 
     public static function loadApiMetadata(ApiMetadataDriver $metadata): void
     {
-        $metadata->setGroupPrefix('company_tags')
+        $metadata->setGroupPrefix('companytag')
             ->addListProperties(
                 [
                     'id',
@@ -82,7 +89,7 @@ class CompanyTags
             ->build();
     }
 
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -151,25 +158,16 @@ class CompanyTags
         return false;
     }
 
-    public function getCompanies()
+    public function setCompanies(ArrayCollection $companies): void
     {
-        if (!$this->companies instanceof ArrayCollection) {
-            $this->loadCompanies();
-        }
-
-        return $this->companies;
+        $this->companies = $companies;
     }
 
-    private function loadCompanies(): void
+    /**
+     * @return Collection<int, Company>
+     */
+    public function getCompanies(): Collection
     {
-        if (empty($this->companies)) {
-            $this->companies = new ArrayCollection();
-        } else {
-            $arrayCollection = new ArrayCollection();
-            foreach ($this->companies as $company) {
-                $arrayCollection->add($company);
-            }
-            $this->companies = $arrayCollection;
-        }
+        return $this->companies;
     }
 }

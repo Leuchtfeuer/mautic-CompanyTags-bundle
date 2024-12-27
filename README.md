@@ -49,6 +49,8 @@ In Campaigns, you now have a new Action called "Modify Company Tags".
 
 In Reports, you now have a new data source "Company Tags" that allows you to filter on Company Tags.
 
+API is also supported. You can add, remove or update company tags from companies via API.
+
 
 ## Troubleshooting
 Make sure you have not only installed but also enabled the Plugin.

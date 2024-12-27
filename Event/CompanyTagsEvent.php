@@ -7,11 +7,8 @@ use Mautic\LeadBundle\Entity\Company;
 
 class CompanyTagsEvent extends CommonEvent
 {
-    private Company $company;
-
-    public function __construct(Company $company)
+    public function __construct(private Company $company)
     {
-        $this->company = $company;
     }
 
     public function getCompany(): Company

@@ -39,6 +39,7 @@ class CampaignSubscriber implements EventSubscriberInterface
         $event->addAction('companytag.changetags', $action);
     }
 
+    // @phpstan-ignore-next-line
     public function onCampaignTriggerAction(CampaignExecutionEvent $event): void
     {
         if (!$event->checkContext('companytag.changetags')) {
@@ -73,7 +74,5 @@ class CampaignSubscriber implements EventSubscriberInterface
         if ($company instanceof Company && (!empty($tagsToAdd) || !empty($tagsToRemove))) {
             $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
         }
-
-        return;
     }
 }
