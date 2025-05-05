@@ -15,6 +15,21 @@
 
 {% block headerTitle %}{{ company.name }}{% endblock %}
 
+{% block indexButton %}
+    {{- include('@MauticCore/Helper/page_actions.html.twig',
+        {
+            'item'            : company,
+            'routeBase'       : 'company',
+            'langVar'         : 'company',
+            'customButtons'   : [],
+            'templateButtons' : {
+            'close' : securityHasEntityAccess(permissions['lead:leads:viewown'], permissions['lead:leads:viewother'], company.permissionUser),
+        },
+            'targetLabel'     : 'mautic.lead.lead.companies'|trans
+        }
+    ) -}}
+{% endblock %}
+
 {% block actions %}
 {{ includeScript('plugins/LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js') }}
 {% set canEdit     = securityHasEntityAccess(permissions['lead:leads:editown'], permissions['lead:leads:editother'], company.permissionUser) %}
@@ -37,7 +52,7 @@
             'href': path('mautic_company_action', {'objectId': company.id, 'objectAction': 'merge'}),
         },
         'btnText': 'mautic.lead.merge'|trans,
-        'iconClass': 'fa fa-user',
+        'iconClass': 'ri-exchange-2-line',
     }]) %}
 {% endif %}
 
@@ -49,7 +64,7 @@
             'href': path('mautic_company_export_action', {'companyId': company.id}),
         },
         'btnText': 'mautic.core.export'|trans,
-        'iconClass': 'fa fa-download',
+        'iconClass': 'ri-export-line',
     }]) %}
 {% endif %}
 
@@ -61,7 +76,6 @@
         'templateButtons': {
             'edit': canEdit,
             'delete': securityHasEntityAccess(permissions['lead:leads:deleteown'], permissions['lead:leads:deleteother'], company.permissionUser),
-            'close': securityHasEntityAccess(permissions['lead:leads:viewown'], permissions['lead:leads:viewother'], company.permissionUser),
         },
   }) }}
 {% endblock %}
