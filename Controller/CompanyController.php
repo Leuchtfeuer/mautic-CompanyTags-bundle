@@ -86,7 +86,14 @@ class CompanyController extends CompanyControllerBase
         $limit      = $pageHelper->getLimit();
         $start      = $pageHelper->getStart();
         $search     = $request->get('search', $request->getSession()->get('mautic.company.filter', ''));
-        $filter     = $this->filterByCompanyTag($search);
+        $filter     = ['string' => $search, 'force' => []];
+        if (str_contains($search, 'tag:')) {
+            $filter     = $this->filterByCompanyTag($search);
+        }
+        if (str_contains($search, 'company-segment:')) {
+            $filter     = $this->filterByCompanySegment($search);
+        }
+
         $orderBy    = $request->getSession()->get('mautic.company.orderby', 'comp.companyname');
         $orderByDir = $request->getSession()->get('mautic.company.orderbydir', 'ASC');
         $companies  = $this->getModel('lead.company')->getEntities(
@@ -170,6 +177,41 @@ class CompanyController extends CompanyControllerBase
         }
 
         $companiesIds = $this->companyTagModel->getCompaniesIdByTags([$tag->getId()]);
+
+        return [
+            'force' => [
+                [
+                    'column' => 'comp.id',
+                    'expr'   => 'in',
+                    'value'  => $companiesIds,
+                ],
+            ],
+        ];
+    }
+
+    private function filterByCompanySegment(string $search)
+    {
+        $defaultFilter        = ['string' => 'Invalid company segment', 'force' => []];
+        $companySegmentSearch = str_replace('company-segment:', '', $search);
+        $companySegmentSearch = str_replace('"', '', $companySegmentSearch);
+        if (!class_exists(\MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompanySegment::class)) {
+            return $defaultFilter;
+        }
+        $companySegmentResult = $this
+            ->getModel(\MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Model\CompanySegmentModel::class)
+            ->getRepository()->findOneBy(['alias' => $companySegmentSearch]);
+
+        if (!$companySegmentResult) {
+            return ['string' => 'Invalid company segment', 'force' => []];
+        }
+        foreach ($companySegmentResult->getCompaniesSegments() as $companySegmentResult) {
+            assert($companySegmentResult instanceof \MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Entity\CompaniesSegments);
+            $companiesIds[$companySegmentResult->getCompany()->getId()] = $companySegmentResult->getCompany()->getId();
+        }
+
+        if (empty($companiesIds)) {
+            return $defaultFilter;
+        }
 
         return [
             'force' => [
