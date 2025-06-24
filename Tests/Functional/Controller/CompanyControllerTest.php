@@ -271,4 +271,18 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->client->request('GET', '/s/company/view/'.$company->getId());
         $this->assertStringContainsString('LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js', $this->client->getResponse()->getContent());
     }
+
+    public function testSearchCompanySegment()
+    {
+        $company = $this->registerCompany('Test Company Segment', 'test@test.com');
+        $this->client->request('GET', '/s/companies?search=company-segment:comp-seg-2-companies');
+        $this->assertResponseStatusCodeSame(200);
+    }
+
+    public function testSearchCompanySegmentNoColumn()
+    {
+        $company = $this->registerCompany('Test Company Segment', 'test@test.com');
+        $this->client->request('GET', '/s/companies?search=compan:comp-seg-2-companies');
+        $this->assertResponseStatusCodeSame(200);
+    }
 }
