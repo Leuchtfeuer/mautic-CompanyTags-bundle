@@ -1,17 +1,23 @@
 {
   "name": "leuchtfeuer/mautic-companytags-bundle",
   "description": "Provide a 2nd type of Tags which can be applied to Companies",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-or-later",
   "type": "mautic-plugin",
-  "homepage": "https://www.Leuchtfeuer.com",
   "authors": [
     {
       "name": "Leuchtfeuer Digital Marketing GmbH",
-      "email": "mautic-plugins@Leuchtfeuer.com"
+      "email": "mautic-plugins@Leuchtfeuer.com",
+      "homepage": "https://Leuchtfeuer.com/mautic/",
+      "role": "Developer"
     }
   ],
+  "keywords": ["mautic","plugin","integration"],
   "extra": {
     "install-directory-name": "LeuchtfeuerCompanyTagsBundle"
+  },
+  "require": {
+    "php": ">=8.0.2",
+    "mautic/core-lib": "^5.0"
   },
   "autoload": {
     "psr-4": {
