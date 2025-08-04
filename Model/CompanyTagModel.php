@@ -5,9 +5,12 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model;
 use Mautic\CoreBundle\Model\FormModel;
 use Mautic\LeadBundle\Entity\Company;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Event\CompanyTagsEvent;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\CompanyTagEntityType;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\LeuchtfeuerCompanyTagsEvents;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class CompanyTagModel extends FormModel
 {
@@ -61,6 +64,13 @@ class CompanyTagModel extends FormModel
             ->setParameter('company_id', $company->getId())
             ->setParameter('tag_id', $companyTags->getId());
         $qb->executeQuery();
+
+        $this->companyCompanyTagDispatchEvent(
+            $company,
+            [],
+            [$companyTags]
+        );
+
     }
 
     /**
@@ -114,6 +124,31 @@ class CompanyTagModel extends FormModel
         if (!empty($removeCompanyTags)) {
             $this->saveEntities($removeCompanyTags);
         }
+
+        $this->companyCompanyTagDispatchEvent(
+            $company,
+            $addCompanyTags,
+            $removeCompanyTags
+        );
+    }
+
+
+    private function companyCompanyTagDispatchEvent(
+        Company $company,
+        array $addCompanyTags = [],
+        array $removeCompanyTags = [],
+        bool $isNew = false
+    ): ?Event {
+        $nameTrigger = LeuchtfeuerCompanyTagsEvents::COMPANYTAG_COMPANY_POS_UPDATE;
+
+        if ($this->dispatcher->hasListeners($nameTrigger)) {
+            $event = new CompanyTagsEvent($company, $isNew, $addCompanyTags, $removeCompanyTags);
+            $this->dispatcher->dispatch($event, $nameTrigger);
+
+            return $event;
+        }
+
+        return null;
     }
 
     /**
