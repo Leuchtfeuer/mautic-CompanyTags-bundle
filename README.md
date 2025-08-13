@@ -51,6 +51,24 @@ In Reports, you now have a new data source "Company Tags" that allows you to fil
 
 API is also supported. You can add, remove or update company tags from companies via API.
 
+## API
+
+Standard CRUD and extra endpoints are available for managing Company Tags:
+
+```
+GET /api/companytags                                                                                 
+GET /api/companytags/{id}                                                                            
+POST /api/companytags/new                                                                             
+POST /api/companytags/batch/new                                                                       
+PUT /api/companytags/batch/edit                                                                      
+PATCH /api/companytags/batch/edit                                                                      
+PUT /api/companytags/{id}/edit                                                                       
+PATCH /api/companytags/{id}/edit                                                                       
+DELETE /api/companytags/batch/delete                                                                    
+DELETE /api/companytags/{id}/delete                                                                     
+POST /api/companytags/{companyId}/add                                                                 
+POST /api/companytags/{companyId}/remove
+```
 
 ## Troubleshooting
 Make sure you have not only installed but also enabled the Plugin.
