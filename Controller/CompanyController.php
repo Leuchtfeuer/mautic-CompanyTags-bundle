@@ -189,7 +189,10 @@ class CompanyController extends CompanyControllerBase
         ];
     }
 
-    private function filterByCompanySegment(string $search)
+    /**
+     * @return mixed[][]
+     */
+    private function filterByCompanySegment(string $search): array
     {
         $defaultFilter        = ['string' => 'Invalid company segment', 'force' => []];
         $companySegmentSearch = str_replace('company-segment:', '', $search);

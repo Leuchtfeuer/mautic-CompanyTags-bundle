@@ -19,6 +19,11 @@ class CompanyTagModel extends FormModel
         return $this->em->getRepository(CompanyTags::class);
     }
 
+    public function getCompanyRepository(): \Mautic\LeadBundle\Entity\CompanyRepository
+    {
+        return $this->em->getRepository(Company::class);
+    }
+
     /**
      * Get a specific entity or generate a new one if id is empty.
      *
@@ -70,7 +75,6 @@ class CompanyTagModel extends FormModel
             [],
             [$companyTags]
         );
-
     }
 
     /**
@@ -132,6 +136,15 @@ class CompanyTagModel extends FormModel
         );
     }
 
+    /**
+     * @param array<Company> $companies
+     */
+    public function updateCompaniesTags(array $companies, array $addCompanyTags = [], array $removeCompanyTags= []): void
+    {
+        foreach ($companies as $company) {
+            $this->updateCompanyTags($company, $addCompanyTags, $removeCompanyTags);
+        }
+    }
 
     private function companyCompanyTagDispatchEvent(
         Company $company,

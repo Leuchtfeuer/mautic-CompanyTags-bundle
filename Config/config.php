@@ -73,6 +73,14 @@ return [
                 'path'       => '/companies/{objectAction}/{objectId}',
                 'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::executeAction',
             ],
+            'mautic_company_batch_companytag_set' => [
+                'path'       => '/companytag/batch/company/set',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\BatchCompanyTagController::setAction',
+            ],
+            'mautic_company_batch_companytag_view' => [
+                'path'       => '/companytag/batch/company/view',
+                'controller' => 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\BatchCompanyTagController::indexAction',
+            ],
         ],
         'api'  => [
             'mautic_api_companytags' => [
