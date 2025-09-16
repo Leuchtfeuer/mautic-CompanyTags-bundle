@@ -5,11 +5,10 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Event;
 use Mautic\CoreBundle\Event\CommonEvent;
 use Mautic\LeadBundle\Entity\Company;
 
-class CompanyTagsEvent extends CommonEvent
+class CompanyUpdateCompanyTagsEvent extends CommonEvent
 {
     public function __construct(
         private Company $company,
-        protected $isNew = false,
         private array $tagsToAdd = [],
         private array $tagsToRemove = []
     ) {
@@ -28,18 +27,5 @@ class CompanyTagsEvent extends CommonEvent
     public function getTagsToRemove(): array
     {
         return $this->tagsToRemove;
-    }
-
-    public function isNew(): bool
-    {
-        return $this->isNew;
-    }
-
-    public function getTags(): array
-    {
-        return [
-            'added'    => $this->getTagsToAdd(),
-            'removed'  => $this->getTagsToRemove(),
-        ];
     }
 }

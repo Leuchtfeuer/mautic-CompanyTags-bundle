@@ -38,3 +38,23 @@ Mautic.removeCompanyCompanyTag = function (el) {
         }
     });
 };
+
+Mautic.companyTagBatchSubmit = function() {
+    if (Mautic.batchActionPrecheck()) {
+
+        if (mQuery('#companytag_batch_remove').val() || mQuery('#companytag_batch_add').val()) {
+            const ids = Mautic.getCheckedListIds(false, true);
+
+            if (mQuery('#companytag_batch_ids').length) {
+                mQuery('#companytag_batch_ids').val(ids);
+            }
+
+            return true;
+        }
+
+    }
+
+    mQuery('#MauticSharedModal').modal('hide');
+
+    return false;
+};
