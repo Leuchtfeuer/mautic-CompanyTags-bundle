@@ -5,6 +5,20 @@
 
 {% set customButtons = {} %}
 
+{% block indexButton %}
+    {{- include('@MauticCore/Helper/page_actions.html.twig',
+        {
+            'item'            : tag,
+            'routeBase'       : 'companytag',
+            'langVar'         : 'companytag',
+            'customButtons': customButtons|default([]),
+            'templateButtons' : {
+                'close' : securityHasEntityAccess(true, true, 1),
+            },
+            'targetLabel' : 'mautic.company.tags'|trans
+        }
+    ) -}}
+{% endblock %}
 {% block actions %}
     {{- include('@MauticCore/Helper/page_actions.html.twig', {
         item : tag,
