@@ -178,7 +178,14 @@ class CompanyTagController extends AbstractStandardFormController
      */
     public function newAction(Request $request): RedirectResponse|JsonResponse|Response
     {
-        return $this->newStandard($request);
+        $response = $this->newStandard($request);
+        if ( $response->isOk() ){
+            $this->addFlashMessage(
+                'mautic.company_tags.return.message.save'
+            );
+        }
+
+        return $response;
     }
 
     /**
@@ -249,5 +256,19 @@ class CompanyTagController extends AbstractStandardFormController
                 'mauticContent' => 'companytag',
             ],
         ]);
+    }
+
+    /**
+     * Override to customize redirect behavior after actions
+     */
+    protected function getPostActionRedirectArguments(array $args, $action): array
+    {
+        if ($action === 'new' && isset($args['entity']) && $args['entity']->getId()) {
+            // Set custom route with parameters
+            $args['returnUrl'] = $this->generateUrl('mautic_companytag_index');
+            $args['contentTemplate'] = 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::indexAction';
+        }
+
+        return parent::getPostActionRedirectArguments($args, $action);
     }
 }
