@@ -5,6 +5,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Tests\Functional\Controller;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
+use Mautic\UserBundle\Entity\User;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 
 class CompanyTagsControllerTest extends MauticMysqlTestCase
@@ -13,14 +14,20 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
     {
         parent::setUp();
         $this->activePlugin();
-        $this->useCleanupRollback = false;
-        $this->setUpSymfony($this->configParams);
+        $this->loginAdminUser();
+    }
+
+    private function loginAdminUser(): void
+    {
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'admin']);
+        assert($user instanceof User);
+        $this->loginUser($user);
     }
 
     public function testNewViewAction(): void
     {
         $this->client->request('GET', '/s/companytag/new');
-        $this->assertResponseStatusCodeSame(200);
+        self::assertResponseStatusCodeSame(200);
     }
 
     public function testNewAction(): void

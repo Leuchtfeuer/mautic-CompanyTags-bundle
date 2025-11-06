@@ -48,7 +48,6 @@ class CompanyTagModel extends FormModel
      *
      * @param object                              $entity
      * @param \Symfony\Component\Form\FormFactory $formFactory
-     * @param null                                $action
      * @param array<mixed>                        $options
      */
     public function createForm($entity, $formFactory, $action = null, $options = []): FormInterface
@@ -138,6 +137,8 @@ class CompanyTagModel extends FormModel
 
     /**
      * @param array<Company> $companies
+     * @param array<CompanyTags> $addCompanyTags
+     * @param array<CompanyTags> $removeCompanyTags
      */
     public function updateCompaniesTags(array $companies, array $addCompanyTags = [], array $removeCompanyTags= []): void
     {
@@ -146,11 +147,16 @@ class CompanyTagModel extends FormModel
         }
     }
 
+    /**
+     * @param array<CompanyTags> $addCompanyTags
+     * @param array<CompanyTags> $removeCompanyTags
+     * @param bool $isNew
+     */
     private function companyCompanyTagDispatchEvent(
         Company $company,
         array $addCompanyTags = [],
         array $removeCompanyTags = [],
-        bool $isNew = false
+        bool $isNew = false,
     ): ?Event {
         $nameTrigger = LeuchtfeuerCompanyTagsEvents::COMPANYTAG_COMPANY_POS_UPDATE;
 

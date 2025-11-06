@@ -24,7 +24,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
 
     public function testModifyCompanyTagsInCampaign(): void
     {
-        $companyTagModel = self::$container->get('mautic.companytag.model.companytag');
+        $companyTagModel = self::getContainer()->get('mautic.companytag.model.companytag');
 
         /**
          * ADD Lead
@@ -159,7 +159,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
 
     public function testModifyCompanyTagsWithoutTagsFromScratch(): void
     {
-        $companyTagModel = self::$container->get('mautic.companytag.model.companytag');
+        $companyTagModel = self::getContainer()->get('mautic.companytag.model.companytag');
 
         /**
          * ADD Lead

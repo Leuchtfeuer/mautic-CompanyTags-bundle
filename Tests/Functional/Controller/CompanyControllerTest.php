@@ -6,6 +6,7 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
+use Mautic\UserBundle\Entity\User;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 
@@ -133,6 +134,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
     private function activePlugin(bool $isPublished = true): void
     {
         $this->client->request('GET', '/s/plugins/reload');
+        $this->loginAdminUser();
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerCompanyTags']);
         if (empty($integration)) {
             $plugin      = $this->em->getRepository(Plugin::class)->findOneBy(['bundle' => 'LeuchtfeuerCompanyTagsBundle']);
@@ -145,8 +147,7 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->em->getRepository(Integration::class)->saveEntity($integration);
         $this->em->persist($integration);
         $this->em->flush();
-        $this->useCleanupRollback = false;
-        $this->setUpSymfony($this->configParams);
+        $this->loginAdminUser();
     }
 
     public function testResearchBySameTagInTwoCompanies(): void
@@ -272,17 +273,24 @@ class CompanyControllerTest extends MauticMysqlTestCase
         $this->assertStringContainsString('LeuchtfeuerCompanyTagsBundle/Assets/js/companyTag.js', $this->client->getResponse()->getContent());
     }
 
-    public function testSearchCompanySegment()
+    public function testSearchCompanySegment(): void
     {
         $company = $this->registerCompany('Test Company Segment', 'test@test.com');
         $this->client->request('GET', '/s/companies?search=company-segment:comp-seg-2-companies');
         $this->assertResponseStatusCodeSame(200);
     }
 
-    public function testSearchCompanySegmentNoColumn()
+    public function testSearchCompanySegmentNoColumn(): void
     {
         $company = $this->registerCompany('Test Company Segment', 'test@test.com');
         $this->client->request('GET', '/s/companies?search=compan:comp-seg-2-companies');
         $this->assertResponseStatusCodeSame(200);
+    }
+
+    private function loginAdminUser(): void
+    {
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'admin']);
+        assert($user instanceof User);
+        $this->loginUser($user);
     }
 }

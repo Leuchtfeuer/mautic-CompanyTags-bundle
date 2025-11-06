@@ -3,7 +3,6 @@
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
 use Mautic\CoreBundle\Factory\PageHelperFactoryInterface;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -37,7 +36,6 @@ class CompanyController extends CompanyControllerBase
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,
         ManagerRegistry $managerRegistry,
-        MauticFactory $factory,
         ModelFactory $modelFactory,
         UserHelper $userHelper,
         CoreParametersHelper $coreParametersHelper,
@@ -49,7 +47,7 @@ class CompanyController extends CompanyControllerBase
         private CompanyTagModel $companyTagModel,
         private Config $config,
     ) {
-        parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
+        parent::__construct($formFactory, $fieldHelper, $managerRegistry, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
     }
 
     /**
@@ -60,7 +58,6 @@ class CompanyController extends CompanyControllerBase
         if (!$this->config->isPublished()) {
             return parent::indexAction($request, $pageHelperFactory, $page);
         }
-
         // set some permissions
         $permissions = $this->security->isGranted(
             [
@@ -78,7 +75,6 @@ class CompanyController extends CompanyControllerBase
         if (!$permissions['lead:leads:viewother'] && !$permissions['lead:leads:viewown']) {
             return $this->accessDenied();
         }
-
         $this->setListFilters();
 
         $pageHelper = $pageHelperFactory->make('mautic.company', $page);
@@ -93,7 +89,6 @@ class CompanyController extends CompanyControllerBase
         if (str_contains($search, 'company-segment:')) {
             $filter     = $this->filterByCompanySegment($search);
         }
-
         $orderBy    = $request->getSession()->get('mautic.company.orderby', 'comp.companyname');
         $orderByDir = $request->getSession()->get('mautic.company.orderbydir', 'ASC');
         $companies  = $this->getModel('lead.company')->getEntities(
@@ -190,7 +185,7 @@ class CompanyController extends CompanyControllerBase
     }
 
     /**
-     * @return mixed[][]
+     * @return array<string, array<string>|string>
      */
     private function filterByCompanySegment(string $search): array
     {
@@ -215,7 +210,7 @@ class CompanyController extends CompanyControllerBase
         if (empty($companiesIds)) {
             return $defaultFilter;
         }
-
+        /** @phpstan-ignore-next-line */
         return [
             'force' => [
                 [
@@ -291,7 +286,7 @@ class CompanyController extends CompanyControllerBase
 
         $action       = $this->generateUrl('mautic_company_action', ['objectAction' => 'edit', 'objectId' => $objectId]);
         $method       = $request->getMethod();
-        $company      = $request->request->get('company') ?? [];
+        $company      = $request->get('company') ?? [];
 
         $updateSelect = 'POST' === $method
             ? ($company['updateSelect'] ?? false)
@@ -308,13 +303,13 @@ class CompanyController extends CompanyControllerBase
         );
         $companyTagsStructure = $this->customFormCompanyTags($request, $entity);
 
-        // /Check for a submitted form and process it
+        // Check for a submitted form and process it
         if (!$ignorePost && 'POST' === $method) {
             $valid = false;
 
             if (!$cancelled = $this->isFormCancelled($form)) {
                 if ($valid = $this->isFormValid($form)) {
-                    $data = $request->request->get('company');
+                    $data = $request->get('company');
                     // pull the data from the form in order to apply the form's formatting
                     foreach ($form as $f) {
                         $data[$f->getName()] = $f->getData();
@@ -447,7 +442,7 @@ class CompanyController extends CompanyControllerBase
         $page         = $request->getSession()->get('mautic.company.page', 1);
         $method       = $request->getMethod();
         $action       = $this->generateUrl('mautic_company_action', ['objectAction' => 'new']);
-        $company      = $request->request->get('company') ?? [];
+        $company      = $request->get('company') ?? [];
         $updateSelect = InputHelper::clean(
             'POST' === $method
                 ? ($company['updateSelect'] ?? false)
@@ -463,7 +458,6 @@ class CompanyController extends CompanyControllerBase
         $returnUrl            = $this->generateUrl('mautic_company_index', $viewParameters);
         $template             = 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyController::indexAction';
         $companyTagsStructure = $this->customFormCompanyTags($request, $entity);
-
         // /Check for a submitted form and process it
         if ('POST' === $request->getMethod()) {
             $valid = false;
@@ -471,7 +465,7 @@ class CompanyController extends CompanyControllerBase
                 if ($valid = $this->isFormValid($form)) {
                     // form is valid so process the data
                     // get custom field values
-                    $data = $request->request->get('company');
+                    $data = $request->get('company');
                     // pull the data from the form in order to apply the form's formatting
                     foreach ($form as $f) {
                         $data[$f->getName()] = $f->getData();
@@ -505,7 +499,6 @@ class CompanyController extends CompanyControllerBase
                     }
                 }
             }
-
             $passthrough = [
                 'activeLink'    => '#mautic_company_index',
                 'mauticContent' => 'company',
@@ -672,7 +665,7 @@ class CompanyController extends CompanyControllerBase
     {
         $requestData = [];
         if ($request->request->has('custom_company')) {
-            $requestData = $request->request->get('custom_company');
+            $requestData = $request->get('custom_company');
         }
 
         $requestToAdd    = $requestTags  = $requestData['tag'] ?? [];

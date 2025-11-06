@@ -5,6 +5,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Tests\Functional\Controller\
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\PluginBundle\Entity\Plugin;
+use Mautic\UserBundle\Entity\User;
 use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Tests\MauticMysqlTestCase;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
@@ -55,6 +56,7 @@ class CompanyTagApiControllerTest extends MauticMysqlTestCase
         $this->em->flush();
         $this->useCleanupRollback = false;
         $this->setUpSymfony($this->configParams);
+        $this->loginAdminUser();
     }
 
     private function addTag(string $name, string $description): CompanyTags
@@ -301,7 +303,6 @@ class CompanyTagApiControllerTest extends MauticMysqlTestCase
         $newCompany->setName('Test Company 3');
         $this->em->persist($newCompany);
         $this->em->flush();
-
         $companyTag = $this->addTag('Test Company Tag 11', 'Test Company Tag Description 11');
         $this->client->request(Request::METHOD_POST, "/api/companytags/{$newCompany->getId()}/add", ['tags' => [$companyTag->getId()]]);
         $this->assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
@@ -347,5 +348,12 @@ class CompanyTagApiControllerTest extends MauticMysqlTestCase
         $this->assertTrue($response['success']);
         $this->assertSame($companyTag12->getTag(), $response['tags'][0]['tag']);
         $this->assertCount(0, $response['tags'][0]['companies']);
+    }
+
+    private function loginAdminUser(): void
+    {
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'admin']);
+        assert($user instanceof User);
+        $this->loginUser($user);
     }
 }

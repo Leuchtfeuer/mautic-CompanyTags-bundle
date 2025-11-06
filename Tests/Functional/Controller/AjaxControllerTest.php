@@ -27,9 +27,6 @@ class AjaxControllerTest extends MauticMysqlTestCase
     {
         parent::setUp();
         $this->activePlugin();
-
-        $this->useCleanupRollback = false;
-        $this->setUpSymfony($this->configParams);
         $this->tags    = $this->addCompanyTags();
         $this->company = $this->addCompany($this->tags);
     }

@@ -76,8 +76,6 @@ class EntityCompanyTagsTest extends MauticMysqlTestCase
         $this->assertNotContains($company, $companyTag->getCompanies());
     }
 
-    //    public function testCh
-
     private function activePlugin(bool $isPublished = true): void
     {
         $this->client->request('GET', '/s/plugins/reload');
