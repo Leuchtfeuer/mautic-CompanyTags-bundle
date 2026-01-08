@@ -49,7 +49,7 @@ class CompanyTagEntityType extends AbstractType
             ]
         );
 
-        if (!empty($options['action'])) {
+        if (!empty($options['action']) && is_string($options['action'])) {
             $builder->setAction($options['action']);
         }
     }
