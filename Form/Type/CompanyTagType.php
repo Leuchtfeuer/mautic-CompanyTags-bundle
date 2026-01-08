@@ -24,7 +24,7 @@ class CompanyTagType extends AbstractType
             $transformer = new CompanyTagEntityModelTransformer(
                 $this->em,
                 CompanyTags::class,
-                $options['multiple']
+                (bool) $options['multiple']
             );
 
             $builder->addModelTransformer($transformer);

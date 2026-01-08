@@ -36,10 +36,6 @@ class CompanyTagEntityModelTransformer extends TagEntityModelTransformer
             return $entity->getId();
         }
 
-        if (is_null($entity)) {
-            return [];
-        }
-
         $return = [];
         foreach ($entity as $e) {
             if (!is_object($e) || !method_exists($e, 'getId')) {
