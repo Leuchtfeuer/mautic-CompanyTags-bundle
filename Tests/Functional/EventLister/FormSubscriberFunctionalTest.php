@@ -75,7 +75,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
          * ADD Company to Lead via CompanyLead.
          */
         $companyTagModel->updateCompanyTags($company, [$companyTags1, $companyTags2]);
-        
+
         $companyLead = new CompanyLead();
         $companyLead->setCompany($company);
         $companyLead->setLead($lead);
@@ -87,7 +87,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->em->flush();
 
         /**
-         * CREATE Form with companytag.changetags action
+         * CREATE Form with companytag.changetags action.
          */
         $form = $this->createFormViaApi('Test Form', [
             [
@@ -102,7 +102,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         ]);
 
         /**
-         * SUBMIT Form
+         * SUBMIT Form.
          */
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form');
@@ -118,7 +118,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertTrue($response->isOk() || $response->isRedirection(), 'Form submission failed: '.$response->getContent().' Status: '.$response->getStatusCode());
 
         /**
-         * VERIFY Tags were modified
+         * VERIFY Tags were modified.
          */
         $this->em->clear();
         $tags = $companyTagModel->getRepository()->getTagsByCompany($company);
@@ -133,7 +133,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
             $this->assertContains($tag->getTag(), $included);
         }
 
-        $tagNames = array_map(fn($tag) => $tag->getTag(), $tags);
+        $tagNames = array_map(fn ($tag) => $tag->getTag(), $tags);
         $this->assertNotContains('CompanyTag1', $tagNames);
     }
 
@@ -182,7 +182,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->em->flush();
 
         /**
-         * ADD Company to Lead via CompanyLead (no tags on company yet)
+         * ADD Company to Lead via CompanyLead (no tags on company yet).
          */
         $companyLead = new CompanyLead();
         $companyLead->setCompany($company);
@@ -195,7 +195,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->em->flush();
 
         /**
-         * CREATE Form with companytag.changetags action
+         * CREATE Form with companytag.changetags action.
          */
         $form = $this->createFormViaApi('Test Form 2', [
             [
@@ -210,7 +210,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         ]);
 
         /**
-         * SUBMIT Form
+         * SUBMIT Form.
          */
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form');
@@ -226,7 +226,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertTrue($response->isOk() || $response->isRedirection(), 'Form submission failed: '.$response->getContent().' Status: '.$response->getStatusCode());
 
         /**
-         * VERIFY Tags were added (company had no tags before)
+         * VERIFY Tags were added (company had no tags before).
          */
         $this->em->clear();
         $tags = $companyTagModel->getRepository()->getTagsByCompany($company);
@@ -240,7 +240,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
             $this->assertContains($tag->getTag(), $included);
         }
 
-        $tagNames = array_map(fn($tag) => $tag->getTag(), $tags);
+        $tagNames = array_map(fn ($tag) => $tag->getTag(), $tags);
         $this->assertNotContains('CompanyTag1', $tagNames);
         $this->assertNotContains('CompanyTag2', $tagNames);
     }
@@ -251,12 +251,12 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertInstanceOf(CompanyTagModel::class, $companyTagModel);
 
         /**
-         * DISABLE Plugin
+         * DISABLE Plugin.
          */
         $this->activePlugin(false);
 
         /**
-         * ADD Lead, Company, and CompanyTags
+         * ADD Lead, Company, and CompanyTags.
          */
         $company = new Company();
         $company->setName('Company C');
@@ -288,7 +288,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->em->flush();
 
         /**
-         * CREATE Form with companytag.changetags action
+         * CREATE Form with companytag.changetags action.
          */
         $form = $this->createFormViaApi('Test Form 3', [
             [
@@ -303,7 +303,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         ]);
 
         /**
-         * SUBMIT Form
+         * SUBMIT Form.
          */
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form');
@@ -319,7 +319,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertTrue($response->isOk() || $response->isRedirection(), 'Form submission failed: '.$response->getContent().' Status: '.$response->getStatusCode());
 
         /**
-         * VERIFY Tags were NOT modified (plugin is disabled)
+         * VERIFY Tags were NOT modified (plugin is disabled).
          */
         $this->em->clear();
         $tags = $companyTagModel->getRepository()->getTagsByCompany($company);
@@ -333,7 +333,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
 
         /**
          * ADD Lead without Company
-         * ADD CompanyTags
+         * ADD CompanyTags.
          */
         $lead = new Lead();
         $lead->setEmail('test4@test.com');
@@ -349,7 +349,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->em->flush();
 
         /**
-         * CREATE Form with companytag.changetags action
+         * CREATE Form with companytag.changetags action.
          */
         $form = $this->createFormViaApi('Test Form 4', [
             [
@@ -364,7 +364,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         ]);
 
         /**
-         * SUBMIT Form
+         * SUBMIT Form.
          */
         $crawler     = $this->client->request(Request::METHOD_GET, "/form/{$form->getId()}");
         $formCrawler = $crawler->filter('form');
@@ -380,7 +380,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         $this->assertTrue($response->isOk() || $response->isRedirection(), 'Form submission failed: '.$response->getContent().' Status: '.$response->getStatusCode());
 
         /**
-         * VERIFY No error occurred (action should silently return when no company)
+         * VERIFY No error occurred (action should silently return when no company).
          */
         $this->assertTrue($this->client->getResponse()->isOk());
     }
@@ -414,27 +414,27 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
     {
         $defaultFields = [
             [
-                'label' => 'Email',
-                'type' => 'email',
-                'alias' => 'email',
-                'leadField' => 'email',
-                'mappedField' => 'email',
+                'label'        => 'Email',
+                'type'         => 'email',
+                'alias'        => 'email',
+                'leadField'    => 'email',
+                'mappedField'  => 'email',
                 'mappedObject' => 'contact',
             ],
             [
                 'label' => 'Submit',
-                'type' => 'button',
+                'type'  => 'button',
             ],
         ];
 
         $formPayload = [
-            'name' => $name,
-            'alias' => mb_strtolower(str_replace(' ', '', $name)),
-            'formType' => 'standalone',
+            'name'        => $name,
+            'alias'       => mb_strtolower(str_replace(' ', '', $name)),
+            'formType'    => 'standalone',
             'isPublished' => true,
-            'fields' => $defaultFields,
-            'actions' => $actions,
-            'postAction' => 'return',
+            'fields'      => $defaultFields,
+            'actions'     => $actions,
+            'postAction'  => 'return',
         ];
 
         $this->client->request(Request::METHOD_POST, '/api/forms/new', $formPayload);
@@ -449,7 +449,7 @@ class FormSubscriberFunctionalTest extends MauticMysqlTestCase
         }
 
         $formId = $response['form']['id'];
-        $form = $this->em->getRepository(Form::class)->find($formId);
+        $form   = $this->em->getRepository(Form::class)->find($formId);
         if (null === $form) {
             throw new \RuntimeException('Form with ID '.$formId.' was not found after creation');
         }
