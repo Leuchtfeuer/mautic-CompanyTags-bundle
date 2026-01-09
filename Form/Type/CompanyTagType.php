@@ -14,7 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class CompanyTagType extends AbstractType
 {
     public function __construct(
-        private EntityManager $em
+        private EntityManager $em,
     ) {
     }
 
@@ -37,6 +37,7 @@ class CompanyTagType extends AbstractType
             [
                 'label'           => 'mautic.company.tags',
                 'class'           => CompanyTags::class,
+                /** @phpstan-ignore-next-line */
                 'query_builder'   => fn (EntityRepository $er) => $er->createQueryBuilder('t')->orderBy('t.tag', \Doctrine\Common\Collections\Criteria::ASC),
                 'choice_label'    => 'tag',
                 'multiple'        => true,

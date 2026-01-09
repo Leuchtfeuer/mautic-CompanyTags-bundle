@@ -7,7 +7,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\EventListener;
 use Mautic\CoreBundle\CoreEvents;
 use Mautic\CoreBundle\Event\CustomButtonEvent;
 use Mautic\CoreBundle\Twig\Helper\ButtonHelper;
-use MauticPlugin\LeuchtfeuerCompanySegmentsBundle\Integration\Config;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;

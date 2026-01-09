@@ -5,7 +5,6 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller;
 use Doctrine\Persistence\ManagerRegistry;
 use Mautic\CoreBundle\Controller\AjaxController as CommonAjaxController;
 use Mautic\CoreBundle\Controller\AjaxLookupControllerTrait;
-use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\InputHelper;
@@ -27,7 +26,6 @@ class AjaxController extends CommonAjaxController
     // @phpstan-ignore-next-line
     public function __construct(
         ManagerRegistry $doctrine,
-        MauticFactory $factory,
         ModelFactory $modelFactory,
         UserHelper $userHelper,
         CoreParametersHelper $coreParametersHelper,
@@ -37,9 +35,9 @@ class AjaxController extends CommonAjaxController
         ?RequestStack $requestStack,
         ?CorePermissions $security,
         private CompanyTagModel $companyTagModel,
-        private CompanyModel $companyModel
+        private CompanyModel $companyModel,
     ) {
-        parent::__construct($doctrine, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
+        parent::__construct($doctrine, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
     }
 
     public function addCompanyTagsAction(Request $request): JsonResponse
@@ -48,7 +46,7 @@ class AjaxController extends CommonAjaxController
             return $this->accessDenied();
         }
 
-        $tags = $request->request->get('tags');
+        $tags = $request->get('tags');
         $tags = json_decode($tags, true);
 
         if (is_array($tags)) {
@@ -90,8 +88,8 @@ class AjaxController extends CommonAjaxController
             return $this->accessDenied();
         }
 
-        $tagId        = (int) InputHelper::clean($request->request->get('tagId'));
-        $companyTagId = (int) InputHelper::clean($request->request->get('companyId'));
+        $tagId        = (int) InputHelper::clean($request->get('tagId'));
+        $companyTagId = (int) InputHelper::clean($request->get('companyId'));
         if (!$tagId || !$companyTagId) {
             return $this->sendJsonResponse(['success' => 0]);
         }

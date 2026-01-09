@@ -14,6 +14,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 
 class CompanyTagPermissionsTest extends MauticMysqlTestCase
 {
@@ -38,8 +39,7 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
         $this->em->getRepository(Integration::class)->saveEntity($integration);
         $this->em->persist($integration);
         $this->em->flush();
-        $this->useCleanupRollback = false;
-        $this->setUpSymfony($this->configParams);
+        $this->loginAdminUser();
     }
 
     public function testCheckPermissionIsEnable(): void
@@ -148,8 +148,7 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
 
         // Disable the default logging in via username and password.
         $this->clientServer = [];
-        $this->setUpSymfony($this->configParams);
-        $this->loginUser($user->getUserIdentifier());
+        $this->loginUser($user);
         $this->client->setServerParameter('PHP_AUTH_USER', $user->getUserIdentifier());
         $this->client->setServerParameter('PHP_AUTH_PW', $password);
 
@@ -318,8 +317,7 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
     {
         // Disable the default logging in via username and password.
         $this->clientServer = [];
-        $this->setUpSymfony($this->configParams);
-        $this->loginUser($user->getUserIdentifier());
+        $this->loginUser($user);
         $this->client->setServerParameter('PHP_AUTH_USER', $user->getUserIdentifier());
         $this->client->setServerParameter('PHP_AUTH_PW', $password);
     }
@@ -379,8 +377,12 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
         $user->setLastName('Doe');
         $user->setUsername($userName);
         $user->setEmail($userName.'@mautic.com');
-        $encoder = static::getContainer()->get('security.encoder_factory')->getEncoder($user);
-        $user->setPassword($encoder->encodePassword($password, null));
+        $encoderFactory = self::getContainer()->get('security.password_hasher_factory');
+        if (method_exists($encoderFactory, 'getPasswordHasher')) {
+            $hasher         = $encoderFactory->getPasswordHasher($user);
+            \assert($hasher instanceof PasswordHasherInterface);
+            $user->setPassword($hasher->hash($password));
+        }
         $user->setRole($role);
 
         $this->em->persist($user);
@@ -400,5 +402,12 @@ class CompanyTagPermissionsTest extends MauticMysqlTestCase
         $this->em->flush();
 
         return $role;
+    }
+
+    private function loginAdminUser(): void
+    {
+        $user = $this->em->getRepository(User::class)->findOneBy(['username' => 'admin']);
+        assert($user instanceof User);
+        $this->loginUser($user);
     }
 }

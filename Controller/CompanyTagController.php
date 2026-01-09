@@ -4,7 +4,6 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Mautic\CoreBundle\Controller\AbstractStandardFormController;
-use Mautic\CoreBundle\Factory\MauticFactory;
 use Mautic\CoreBundle\Factory\ModelFactory;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\CoreBundle\Helper\UserHelper;
@@ -29,7 +28,6 @@ class CompanyTagController extends AbstractStandardFormController
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,
         ManagerRegistry $managerRegistry,
-        MauticFactory $factory,
         ModelFactory $modelFactory,
         UserHelper $userHelper,
         CoreParametersHelper $coreParametersHelper,
@@ -39,9 +37,9 @@ class CompanyTagController extends AbstractStandardFormController
         RequestStack $requestStack,
         CorePermissions $security,
         private CompanyTagModel $companyTagModel,
-        private Config $config
+        private Config $config,
     ) {
-        parent::__construct($formFactory, $fieldHelper, $managerRegistry, $factory, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
+        parent::__construct($formFactory, $fieldHelper, $managerRegistry, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
         if (!$this->config->isPublished()) {
             throw new \RuntimeException('The plugin is not published');
         }
@@ -179,7 +177,7 @@ class CompanyTagController extends AbstractStandardFormController
     public function newAction(Request $request): RedirectResponse|JsonResponse|Response
     {
         $response = $this->newStandard($request);
-        if ( $response->isOk() ){
+        if ($response->isOk()) {
             $this->addFlashMessage(
                 'mautic.company_tags.return.message.save'
             );
@@ -258,14 +256,15 @@ class CompanyTagController extends AbstractStandardFormController
         ]);
     }
 
+
     /**
-     * Override to customize redirect behavior after actions
+     * // @phpstan-ignore-next-line
      */
     protected function getPostActionRedirectArguments(array $args, $action): array
     {
-        if ($action === 'new' && isset($args['entity']) && $args['entity']->getId()) {
+        if ('new' === $action && isset($args['entity']) && $args['entity']->getId()) {
             // Set custom route with parameters
-            $args['returnUrl'] = $this->generateUrl('mautic_companytag_index');
+            $args['returnUrl']       = $this->generateUrl('mautic_companytag_index');
             $args['contentTemplate'] = 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::indexAction';
         }
 

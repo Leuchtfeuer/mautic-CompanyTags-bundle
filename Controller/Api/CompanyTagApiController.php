@@ -43,16 +43,15 @@ class CompanyTagApiController extends CommonApiController
         ModelFactory $modelFactory,
         EventDispatcherInterface $dispatcher,
         CoreParametersHelper $coreParametersHelper,
-        MauticFactory $factory,
         private CompanyTagModel $companyTagModel,
-        private CompanyModel $companyModel
+        private CompanyModel $companyModel,
     ) {
         $this->model             = $this->companyTagModel;
         $this->entityClass       = CompanyTags::class;
         $this->entityNameOne     = 'companytag';
         $this->entityNameMulti   = 'companytags';
         $this->permissionBase    = 'companytag:companytags';
-        parent::__construct($security, $translator, $entityResultHelper, $router, $formFactory, $appVersion, $requestStack, $doctrine, $modelFactory, $dispatcher, $coreParametersHelper, $factory);
+        parent::__construct($security, $translator, $entityResultHelper, $router, $formFactory, $appVersion, $requestStack, $doctrine, $modelFactory, $dispatcher, $coreParametersHelper);
     }
 
     public function addCompanyTagToCompanyAction(Request $request, int $companyId): Response
@@ -61,13 +60,14 @@ class CompanyTagApiController extends CommonApiController
             return $this->accessDenied();
         }
 
-        $tagsId = $request->request->get('tags');
+        $tagsId = $request->get('tags');
 
         if (!$companyId || !$tagsId) {
             return $this->badRequest();
         }
 
         $company  = $this->companyModel->getEntity($companyId);
+
         $tags     = $this->model->getRepository()->findBy(['id' => $tagsId]);
 
         if (!$company || !$tags) {
@@ -99,7 +99,7 @@ class CompanyTagApiController extends CommonApiController
             return $this->accessDenied();
         }
 
-        $tagsId = $request->request->get('tags');
+        $tagsId = $request->get('tags');
 
         if (!$companyId || !$tagsId) {
             return $this->badRequest();

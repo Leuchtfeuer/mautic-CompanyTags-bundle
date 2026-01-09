@@ -3,15 +3,13 @@
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-// class CustomCompanyType extends AbstractTypeExtension
 class CustomCompanyType extends AbstractType
 {
     public function __construct(
-        protected TranslatorInterface $translator
+        protected TranslatorInterface $translator,
     ) {
     }
 
