@@ -11,6 +11,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\ModifyCompanyTagsType;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\LeuchtfeuerCompanyTagsEvents;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 
 class CampaignSubscriber implements EventSubscriberInterface
 {
@@ -48,30 +49,33 @@ class CampaignSubscriber implements EventSubscriberInterface
 
         $config      = $event->getConfig();
         $lead        = $event->getLead();
-        $companyName = $lead->getCompany();
-        if (empty($companyName)) {
+        $company     = $lead->getCompany();
+        if (empty($company)) {
             return;
         }
 
-        if (is_object($companyName)) {
-            $companyName = $companyName->getName();
+        if (!($company instanceof Company)) {
+            return;
         }
+        $companyName = $company->getName();
 
         $company    = $this->companyModel->getRepository()->findOneBy(['name' => $companyName]);
         $addTags    = (!empty($config['add_tags'])) ? $config['add_tags'] : [];
         $removeTags = (!empty($config['remove_tags'])) ? $config['remove_tags'] : [];
         $tagsToAdd  = $this->companyTagsModel->getRepository()->findBy(
             [
-                'tag'     => $addTags,
+                'id'     => $addTags,
             ]
         );
         $tagsToRemove = $this->companyTagsModel->getRepository()->findBy(
             [
-                'tag'     => $removeTags,
+                'id'     => $removeTags,
             ]
         );
 
         if ($company instanceof Company && (!empty($tagsToAdd) || !empty($tagsToRemove))) {
+            /** @var array<CompanyTags> $tagsToAdd */
+            /** @var array<CompanyTags> $tagsToRemove */
             $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
         }
     }

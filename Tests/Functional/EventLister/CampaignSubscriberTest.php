@@ -9,8 +9,10 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\LeadBundle\Entity\Company;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\PluginBundle\Entity\Integration;
+use Mautic\PluginBundle\Entity\IntegrationRepository;
 use Mautic\PluginBundle\Entity\Plugin;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 
 class CampaignSubscriberTest extends MauticMysqlTestCase
 {
@@ -25,6 +27,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
     public function testModifyCompanyTagsInCampaign(): void
     {
         $companyTagModel = self::getContainer()->get('mautic.companytag.model.companytag');
+        $this->assertInstanceOf(CompanyTagModel::class, $companyTagModel);
 
         /**
          * ADD Lead
@@ -84,8 +87,8 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $modifyTagsAction->setType('companytag.changetags');
         $modifyTagsAction->setEventType('action');
         $modifyTagsAction->setProperties([
-            'add_tags'    => ['CompanyTag3', 'CompanyTag4'],
-            'remove_tags' => ['CompanyTag1'],
+            'add_tags'    => [$companyTags3->getId(), $companyTags4->getId()],
+            'remove_tags' => [$companyTags1->getId()],
         ]);
 
         $campaign = new Campaign();
@@ -160,6 +163,7 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
     public function testModifyCompanyTagsWithoutTagsFromScratch(): void
     {
         $companyTagModel = self::getContainer()->get('mautic.companytag.model.companytag');
+        $this->assertInstanceOf(CompanyTagModel::class, $companyTagModel);
 
         /**
          * ADD Lead
@@ -218,8 +222,8 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
         $modifyTagsAction->setType('companytag.changetags');
         $modifyTagsAction->setEventType('action');
         $modifyTagsAction->setProperties([
-            'add_tags'    => ['CompanyTag3', 'CompanyTag4'],
-            'remove_tags' => ['CompanyTag1'],
+            'add_tags'    => [$companyTags3->getId(), $companyTags4->getId()],
+            'remove_tags' => [$companyTags1->getId()],
         ]);
 
         $campaign = new Campaign();
@@ -303,7 +307,9 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
             $integration->setApiKeys([]);
         }
         $integration->setIsPublished($isPublished);
-        $this->em->getRepository(Integration::class)->saveEntity($integration);
+        $integrationRepository = $this->em->getRepository(Integration::class);
+        $this->assertInstanceOf(IntegrationRepository::class, $integrationRepository);
+        $integrationRepository->saveEntity($integration);
         $this->em->persist($integration);
         $this->em->flush();
     }

@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Mautic\LeadBundle\Form\DataTransformer\TagEntityModelTransformer;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\DataTransformer\CompanyTagEntityModelTransformer;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,10 +22,10 @@ class CompanyTagType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['add_transformer']) {
-            $transformer = new TagEntityModelTransformer(
+            $transformer = new CompanyTagEntityModelTransformer(
                 $this->em,
                 CompanyTags::class,
-                $options['multiple']
+                (bool) $options['multiple']
             );
 
             $builder->addModelTransformer($transformer);
