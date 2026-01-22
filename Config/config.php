@@ -30,6 +30,15 @@ return [
                 ],
             ],
         ],
+        'helpers'      => [
+            'leuchtfeuercompanytags.helper.delete_validator' => [
+                'class'     => MauticPlugin\LeuchtfeuerCompanyTagsBundle\Helper\CompanyTagDeleteValidator::class,
+                'arguments' => [
+                    'mautic.companypoint.model.triggerevent',
+                    'mautic.companytag.model.companytag',
+                ],
+            ],
+        ],
     ],
     'menu'        => [
         'main' => [
