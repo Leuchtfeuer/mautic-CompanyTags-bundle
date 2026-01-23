@@ -82,7 +82,7 @@ and
 `php bin/console mautic:assets:generate`
 
 ## Known Issues
-* In the Company Tahgs view, bulk delete is currently not working
+* Deleting tags which are in use (in campaign actions, form actions or company trigger actions) os prevented in UI but not when deleting tags via API.
 
 ## Future Ideas
 * Add single and bulk action for modifiying Company Tags to Company list view

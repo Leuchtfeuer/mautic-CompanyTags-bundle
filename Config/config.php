@@ -36,6 +36,8 @@ return [
                 'arguments' => [
                     'mautic.companypoint.model.triggerevent',
                     'mautic.companytag.model.companytag',
+                    'mautic.campaign.repository.event',
+                    'mautic.form.model.action',
                 ],
             ],
         ],

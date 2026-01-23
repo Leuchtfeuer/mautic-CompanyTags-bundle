@@ -190,43 +190,4 @@ class CompanyTagModel extends FormModel
 
         return $this->getRepository()->findBy(['id' => $ids]);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function dispatchEvent($action, &$entity, $isNew = false, Event $event = null): ?Event
-    {
-        if (!$entity instanceof CompanyTags) {
-            throw new MethodNotAllowedHttpException(['CompanyTags']);
-        }
-
-        switch ($action) {
-            case 'pre_save':
-                $name = LeuchtfeuerCompanyTagsEvents::COMPANY_TAG_UPDATE;
-                break;
-            case 'post_save':
-                $name = LeuchtfeuerCompanyTagsEvents::COMPANY_POS_SAVE;
-                break;
-            case 'pre_delete':
-                $name = LeuchtfeuerCompanyTagsEvents::COMPANY_TAG_PRE_DELETE;
-                break;
-            case 'post_delete':
-                $name = LeuchtfeuerCompanyTagsEvents::COMPANY_TAG_POST_DELETE;
-                break;
-            default:
-                return null;
-        }
-
-        if ($this->dispatcher->hasListeners($name)) {
-            if (empty($event)) {
-                $event = new CompanyTagEvent($entity, $isNew);
-            }
-
-            $this->dispatcher->dispatch($event, $name);
-
-            return $event;
-        }
-
-        return null;
-    }
 }
