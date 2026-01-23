@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO;
 
-/**
- * DTO for tag deletion validation results.
- */
 class TagDeletionValidationResult
 {
     /**
@@ -46,10 +43,10 @@ class TagDeletionValidationResult
     }
 
     /**
-     * Format blocked tags as error message.
-     * Example: Cannot remove Company Tags that are still in use: "tag1" (Campaign ID: 12, 134 / Company Point Trigger ID: 5)
+     * Get formatted list of blocked tags with their usage info.
+     * Example: "tag1" (Campaign ID: 12, 134 / Company Point Trigger ID: 5)
      */
-    public function getBlockedTagsErrorMessage(): string
+    public function getBlockedTagsList(): string
     {
         if (!$this->hasBlockedTags()) {
             return '';
@@ -61,9 +58,6 @@ class TagDeletionValidationResult
             $errorMessages[] = sprintf('"%s" (%s)', $tagName, $usageString);
         }
 
-        return sprintf(
-            'Cannot remove Company Tags that are still in use: %s',
-            implode(', ', $errorMessages)
-        );
+        return implode(', ', $errorMessages);
     }
 }

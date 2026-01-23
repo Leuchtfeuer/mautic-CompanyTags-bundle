@@ -12,6 +12,7 @@ use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTriggerEvent;
 use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Model\CompanyTriggerEventModel;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagDeletionValidationResult;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagUsageInfo;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 
 /**
@@ -39,23 +40,29 @@ class CompanyTagDeleteValidator
     public function validateForDeletion(array $tagIds): TagDeletionValidationResult
     {
         $deletableIds = [];
-        $blockedTags = [];  // Array<string, TagUsageInfo>
+        /** @var array<string, TagUsageInfo> $blockedTags */
+        $blockedTags = [];
 
         foreach ($tagIds as $tagId) {
-            $entity = $this->companyTagModel->getEntity($tagId);
+            $entity = $this->companyTagModel->getRepository()->find($tagId);
 
-            if (null === $entity || !$entity->getId()) {
+            if (!$entity instanceof CompanyTags) {
+                continue;
+            }
+
+            $entityId = $entity->getId();
+            if (null === $entityId) {
                 continue;
             }
 
             // Check usage in triggers
-            $usedInTriggerEvents = $this->checkTagUsageInPointTriggers($entity->getId());
+            $usedInTriggerEvents = $this->checkTagUsageInPointTriggers($entityId);
             $usedInTriggers = array_map(fn($triggerEvent) => $triggerEvent->getTrigger(), $usedInTriggerEvents);
 
-            $usedInCampaignEvents = $this->checkTagUsageInCampaigns($entity->getId());
+            $usedInCampaignEvents = $this->checkTagUsageInCampaigns($entityId);
             $usedInCampaigns = array_map(fn($campaignEvent) => $campaignEvent->getCampaign(), $usedInCampaignEvents);
 
-            $usedInFormActions = $this->checkTagUsageInForms($entity->getId());
+            $usedInFormActions = $this->checkTagUsageInForms($entityId);
             $usedInForms = array_map(fn($formAction) => $formAction->getForm(), $usedInFormActions);
 
             // Create usage info
@@ -66,7 +73,10 @@ class CompanyTagDeleteValidator
             );
 
             if ($usageInfo->isUsed()) {
-                $blockedTags[$entity->getTag()] = $usageInfo;
+                $tagName = $entity->getTag();
+                if (null !== $tagName) {
+                    $blockedTags[$tagName] = $usageInfo;
+                }
             } else {
                 $deletableIds[] = $tagId;
             }

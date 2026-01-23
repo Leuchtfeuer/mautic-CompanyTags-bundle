@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO;
 
-/**
- * DTO to track where a company tag is being used.
- * Supports multiple entity types: triggers, campaigns, forms.
- */
+use Mautic\CampaignBundle\Entity\Campaign;
+use Mautic\FormBundle\Entity\Form;
+use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTrigger;
+
 class TagUsageInfo
 {
     /**
-     * @param array $triggers Array of CompanyTrigger objects
-     * @param array $campaigns Array of Campaign objects (to be implemented)
-     * @param array $forms Array of Form objects (to be implemented)
+     * @param array<CompanyTrigger> $triggers
+     * @param array<Campaign> $campaigns
+     * @param array<Form|null> $forms
      */
     public function __construct(
         private array $triggers = [],
@@ -23,7 +23,7 @@ class TagUsageInfo
     }
 
     /**
-     * @return array
+     * @return array<CompanyTrigger>
      */
     public function getTriggers(): array
     {
@@ -31,7 +31,7 @@ class TagUsageInfo
     }
 
     /**
-     * @return array
+     * @return array<Campaign>
      */
     public function getCampaigns(): array
     {
@@ -39,16 +39,13 @@ class TagUsageInfo
     }
 
     /**
-     * @return array
+     * @return array<Form|null>
      */
     public function getForms(): array
     {
         return $this->forms;
     }
 
-    /**
-     * Check if tag is used anywhere.
-     */
     public function isUsed(): bool
     {
         return !empty($this->triggers) || !empty($this->campaigns) || !empty($this->forms);
@@ -73,7 +70,7 @@ class TagUsageInfo
         }
 
         if (!empty($this->forms)) {
-            $formIds = array_map(fn($form) => $form->getId(), $this->forms);
+            $formIds = array_map(fn($form) => $form->getId(), array_filter($this->forms));
             $parts[] = sprintf('Form ID: %s', implode(', ', $formIds));
         }
 

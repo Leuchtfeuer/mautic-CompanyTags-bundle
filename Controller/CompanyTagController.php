@@ -198,14 +198,16 @@ class CompanyTagController extends AbstractStandardFormController
         return $this->editStandard($request, $objectId, $ignorePost);
     }
 
-    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse
+    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse|Response
     {
-        // Validate if tag can be deleted before attempting deletion
         $validationResult = $this->deleteValidator->validateForDeletion([$objectId]);
 
         if ($validationResult->hasBlockedTags()) {
-            // Tag is in use, show error and don't delete
-            $this->addFlashMessage($validationResult->getBlockedTagsErrorMessage(), [], 'error');
+            $this->addFlashMessage(
+                $this->translator->trans('mautic.company_tags.error.in_use') . ' ' . $validationResult->getBlockedTagsList(),
+                [],
+                'error'
+            );
 
             $page      = $request->getSession()->get('mautic.'.$this->getSessionBase().'.page', 1);
             $returnUrl = $this->generateUrl($this->getIndexRoute(), ['page' => $page]);
@@ -220,16 +222,15 @@ class CompanyTagController extends AbstractStandardFormController
             ]);
         }
 
-        // Tag can be deleted, proceed with standard deletion
         return $this->deleteStandard($request, $objectId);
     }
 
     /**
      * Deletes a group of entities.
      *
-     * @return JsonResponse|RedirectResponse
+     * @return JsonResponse|RedirectResponse|Response
      */
-    public function batchDeleteAction(Request $request)
+    public function batchDeleteAction(Request $request): JsonResponse|RedirectResponse|Response
     {
         $page      = $request->getSession()->get('mautic.'.$this->getSessionBase().'.page', 1);
         $returnUrl = $this->generateUrl($this->getIndexRoute(), ['page' => $page]);
@@ -246,11 +247,20 @@ class CompanyTagController extends AbstractStandardFormController
 
         if ('POST' == $request->getMethod()) {
             $model     = $this->getModel($this->getModelName());
+            \assert($model instanceof CompanyTagModel);
             $ids       = json_decode($request->query->get('ids', ''));
             $deleteIds = [];
 
-            // Loop over the IDs to perform access checks pre-delete
+            if (!is_array($ids)) {
+                $ids = [];
+            }
+
             foreach ($ids as $objectId) {
+                if (!is_int($objectId) && !is_string($objectId)) {
+                    continue;
+                }
+
+                $objectId = (int) $objectId;
                 $entity = $model->getEntity($objectId);
 
                 if (null === $entity) {
@@ -268,19 +278,18 @@ class CompanyTagController extends AbstractStandardFormController
                 }
             }
 
-            // Validate which tags can be deleted using the helper
             if (!empty($deleteIds)) {
                 $validationResult = $this->deleteValidator->validateForDeletion($deleteIds);
 
-                // Show error for blocked tags
                 if ($validationResult->hasBlockedTags()) {
+                    $blockedTagsList = $validationResult->getBlockedTagsList();
+                    $translatedPrefix = $this->translator->trans('mautic.company_tags.error.in_use');
                     $flashes[] = [
                         'type' => 'error',
-                        'msg'  => $validationResult->getBlockedTagsErrorMessage(),
+                        'msg'  => $translatedPrefix . ' ' . $blockedTagsList,
                     ];
                 }
 
-                // Delete only the tags that are safe to delete
                 if ($validationResult->hasDeletableTags()) {
                     $entities = $model->deleteEntities($validationResult->getDeletableIds());
 
