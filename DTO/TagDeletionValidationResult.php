@@ -7,7 +7,7 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO;
 class TagDeletionValidationResult
 {
     /**
-     * @param array<int> $deletableIds
+     * @param array<int>                  $deletableIds
      * @param array<string, TagUsageInfo> $blockedTags
      */
     public function __construct(
@@ -44,7 +44,7 @@ class TagDeletionValidationResult
 
     /**
      * Get formatted list of blocked tags with their usage info.
-     * Example: "tag1" (Campaign ID: 12, 134 / Company Point Trigger ID: 5)
+     * Example: "tag1" (Campaign ID: 12, 134 / Company Point Trigger ID: 5).
      */
     public function getBlockedTagsList(): string
     {
@@ -54,7 +54,7 @@ class TagDeletionValidationResult
 
         $errorMessages = [];
         foreach ($this->blockedTags as $tagName => $usageInfo) {
-            $usageString = $usageInfo->formatUsageString();
+            $usageString     = $usageInfo->formatUsageString();
             $errorMessages[] = sprintf('"%s" (%s)', $tagName, $usageString);
         }
 

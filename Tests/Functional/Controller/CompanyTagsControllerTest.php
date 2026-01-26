@@ -93,7 +93,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 
     public function testDeleteUnusedTagSucceeds(): void
     {
-        $tag = $this->fixtureHelper->createCompanyTag('Unused Tag');
+        $tag   = $this->fixtureHelper->createCompanyTag('Unused Tag');
         $tagId = $tag->getId();
 
         $this->client->request(
@@ -112,7 +112,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 
     public function testDeleteTagUsedInTriggerFails(): void
     {
-        $tag = $this->fixtureHelper->createCompanyTag('Trigger Tag');
+        $tag   = $this->fixtureHelper->createCompanyTag('Trigger Tag');
         $tagId = $tag->getId();
         Assert::assertNotNull($tagId);
 
@@ -142,7 +142,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 
     public function testDeleteTagUsedInCampaignFails(): void
     {
-        $tag = $this->fixtureHelper->createCompanyTag('Campaign Tag');
+        $tag   = $this->fixtureHelper->createCompanyTag('Campaign Tag');
         $tagId = $tag->getId();
         Assert::assertNotNull($tagId);
 
@@ -172,7 +172,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 
     public function testDeleteTagUsedInFormFails(): void
     {
-        $tag = $this->fixtureHelper->createCompanyTag('Form Tag');
+        $tag   = $this->fixtureHelper->createCompanyTag('Form Tag');
         $tagId = $tag->getId();
         Assert::assertNotNull($tagId);
 
@@ -202,7 +202,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 
     public function testDeleteTagUsedInMultipleLocationsFails(): void
     {
-        $tag = $this->fixtureHelper->createCompanyTag('Multi-Location Tag');
+        $tag   = $this->fixtureHelper->createCompanyTag('Multi-Location Tag');
         $tagId = $tag->getId();
         Assert::assertNotNull($tagId);
 
@@ -279,7 +279,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
         $unusedTag1Id = $unusedTag1->getId();
         $unusedTag2Id = $unusedTag2->getId();
 
-        $usedTag1 = $this->fixtureHelper->createCompanyTag('Used in Trigger');
+        $usedTag1   = $this->fixtureHelper->createCompanyTag('Used in Trigger');
         $usedTag1Id = $usedTag1->getId();
         Assert::assertNotNull($usedTag1Id);
 
@@ -289,7 +289,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
             addTagIds: [$usedTag1Id]
         );
 
-        $usedTag2 = $this->fixtureHelper->createCompanyTag('Used in Campaign');
+        $usedTag2   = $this->fixtureHelper->createCompanyTag('Used in Campaign');
         $usedTag2Id = $usedTag2->getId();
         Assert::assertNotNull($usedTag2Id);
 

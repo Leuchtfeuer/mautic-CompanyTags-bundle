@@ -96,7 +96,6 @@ final class FixtureHelper
     }
 
     /**
-     *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
      */
@@ -110,7 +109,7 @@ final class FixtureHelper
         $event->setType('companytags.updatetags');
         $event->setName('Update Company Tags');
         $event->setProperties([
-            'add_tags' => $addTagIds,
+            'add_tags'    => $addTagIds,
             'remove_tags' => $removeTagIds,
         ]);
         $this->em->persist($event);
@@ -131,7 +130,6 @@ final class FixtureHelper
     }
 
     /**
-     *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
      */
@@ -146,7 +144,7 @@ final class FixtureHelper
         $event->setName('Change Company Tags');
         $event->setEventType('action');
         $event->setProperties([
-            'add_tags' => $addTagIds,
+            'add_tags'    => $addTagIds,
             'remove_tags' => $removeTagIds,
         ]);
         $this->em->persist($event);
@@ -169,7 +167,6 @@ final class FixtureHelper
     }
 
     /**
-     *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
      */
@@ -184,7 +181,7 @@ final class FixtureHelper
         $action->setName('Change Company Tags');
         $action->setOrder(1);
         $action->setProperties([
-            'add_tags' => $addTagIds,
+            'add_tags'    => $addTagIds,
             'remove_tags' => $removeTagIds,
         ]);
         $this->em->persist($action);

@@ -5,19 +5,15 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Helper;
 
 use Mautic\CampaignBundle\Entity\Campaign;
-use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Entity\EventRepository;
-use Mautic\FormBundle\Entity\Action;
 use Mautic\FormBundle\Entity\Form;
 use Mautic\FormBundle\Model\ActionModel;
 use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTrigger;
-use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTriggerEvent;
 use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Model\CompanyTriggerEventModel;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagDeletionValidationResult;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagUsageInfo;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
-
 
 class CompanyTagDeleteValidator
 {
@@ -30,10 +26,7 @@ class CompanyTagDeleteValidator
     }
 
     /**
-     *
      * @param array<int> $tagIds Array of tag IDs to validate
-     *
-     * @return TagDeletionValidationResult
      */
     public function validateForDeletion(array $tagIds): TagDeletionValidationResult
     {
@@ -42,10 +35,10 @@ class CompanyTagDeleteValidator
         $blockedTags = [];
 
         $tags = $this->loadTags($tagIds);
-        
-        $triggerUsageMap = $this->buildTriggerUsageMap();
+
+        $triggerUsageMap  = $this->buildTriggerUsageMap();
         $campaignUsageMap = $this->buildCampaignUsageMap();
-        $formUsageMap = $this->buildFormUsageMap();
+        $formUsageMap     = $this->buildFormUsageMap();
 
         foreach ($tags as $tagId => $entity) {
             $entityId = $entity->getId();
@@ -53,9 +46,9 @@ class CompanyTagDeleteValidator
                 continue;
             }
 
-            $usedInTriggers = $triggerUsageMap[$entityId] ?? [];
+            $usedInTriggers  = $triggerUsageMap[$entityId] ?? [];
             $usedInCampaigns = $campaignUsageMap[$entityId] ?? [];
-            $usedInForms = $formUsageMap[$entityId] ?? [];
+            $usedInForms     = $formUsageMap[$entityId] ?? [];
 
             $usageInfo = new TagUsageInfo(
                 triggers: $usedInTriggers,
@@ -77,8 +70,8 @@ class CompanyTagDeleteValidator
     }
 
     /**
-     *
      * @param array<int> $tagIds
+     *
      * @return array<int, CompanyTags>
      */
     private function loadTags(array $tagIds): array
@@ -87,9 +80,9 @@ class CompanyTagDeleteValidator
             return [];
         }
 
-        $tags = $this->companyTagModel->getRepository()->findBy(['id' => $tagIds]);
+        $tags   = $this->companyTagModel->getRepository()->findBy(['id' => $tagIds]);
         $result = [];
-        
+
         foreach ($tags as $tag) {
             if ($tag instanceof CompanyTags) {
                 $id = $tag->getId();
@@ -108,12 +101,12 @@ class CompanyTagDeleteValidator
     private function buildTriggerUsageMap(): array
     {
         /** @var array<int, array<int, CompanyTrigger>> $usageMap */
-        $usageMap = [];
+        $usageMap         = [];
         $allTriggerEvents = $this->companyTriggerEventModel->getRepository()->findBy(['type' => 'companytags.updatetags']);
 
         foreach ($allTriggerEvents as $triggerEvent) {
             $properties = $triggerEvent->getProperties();
-            $trigger = $triggerEvent->getTrigger();
+            $trigger    = $triggerEvent->getTrigger();
 
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
                 foreach ($properties['add_tags'] as $tagId) {
@@ -145,12 +138,12 @@ class CompanyTagDeleteValidator
     private function buildCampaignUsageMap(): array
     {
         /** @var array<int, array<int, Campaign>> $usageMap */
-        $usageMap = [];
+        $usageMap          = [];
         $allCampaignEvents = $this->campaignEventRepository->findBy(['type' => 'companytag.changetags']);
 
         foreach ($allCampaignEvents as $campaignEvent) {
             $properties = $campaignEvent->getProperties();
-            $campaign = $campaignEvent->getCampaign();
+            $campaign   = $campaignEvent->getCampaign();
 
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
                 foreach ($properties['add_tags'] as $tagId) {
@@ -182,12 +175,12 @@ class CompanyTagDeleteValidator
     private function buildFormUsageMap(): array
     {
         /** @var array<int, array<int, Form|null>> $usageMap */
-        $usageMap = [];
+        $usageMap       = [];
         $allFormActions = $this->formActionModel->getRepository()->findBy(['type' => 'companytag.changetags']);
 
         foreach ($allFormActions as $formAction) {
             $properties = $formAction->getProperties();
-            $form = $formAction->getForm();
+            $form       = $formAction->getForm();
 
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
                 foreach ($properties['add_tags'] as $tagId) {

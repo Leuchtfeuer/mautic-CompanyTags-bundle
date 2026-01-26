@@ -181,7 +181,7 @@ class CompanyTagController extends AbstractStandardFormController
     public function newAction(Request $request): RedirectResponse|JsonResponse|Response
     {
         $response = $this->newStandard($request);
-        if ( $response->isOk() ){
+        if ($response->isOk()) {
             $this->addFlashMessage(
                 'mautic.company_tags.return.message.save'
             );
@@ -204,7 +204,7 @@ class CompanyTagController extends AbstractStandardFormController
 
         if ($validationResult->hasBlockedTags()) {
             $this->addFlashMessage(
-                $this->translator->trans('mautic.company_tags.error.in_use') . ' ' . $validationResult->getBlockedTagsList(),
+                $this->translator->trans('mautic.company_tags.error.in_use').' '.$validationResult->getBlockedTagsList(),
                 [],
                 'error'
             );
@@ -227,8 +227,6 @@ class CompanyTagController extends AbstractStandardFormController
 
     /**
      * Deletes a group of entities.
-     *
-     * @return JsonResponse|RedirectResponse|Response
      */
     public function batchDeleteAction(Request $request): JsonResponse|RedirectResponse|Response
     {
@@ -261,7 +259,7 @@ class CompanyTagController extends AbstractStandardFormController
                 }
 
                 $objectId = (int) $objectId;
-                $entity = $model->getEntity($objectId);
+                $entity   = $model->getEntity($objectId);
 
                 if (null === $entity) {
                     $flashes[] = [
@@ -282,11 +280,11 @@ class CompanyTagController extends AbstractStandardFormController
                 $validationResult = $this->deleteValidator->validateForDeletion($deleteIds);
 
                 if ($validationResult->hasBlockedTags()) {
-                    $blockedTagsList = $validationResult->getBlockedTagsList();
+                    $blockedTagsList  = $validationResult->getBlockedTagsList();
                     $translatedPrefix = $this->translator->trans('mautic.company_tags.error.in_use');
-                    $flashes[] = [
+                    $flashes[]        = [
                         'type' => 'error',
-                        'msg'  => $translatedPrefix . ' ' . $blockedTagsList,
+                        'msg'  => $translatedPrefix.' '.$blockedTagsList,
                     ];
                 }
 
@@ -365,13 +363,13 @@ class CompanyTagController extends AbstractStandardFormController
     }
 
     /**
-     * Override to customize redirect behavior after actions
+     * Override to customize redirect behavior after actions.
      */
     protected function getPostActionRedirectArguments(array $args, $action): array
     {
-        if ($action === 'new' && isset($args['entity']) && $args['entity']->getId()) {
+        if ('new' === $action && isset($args['entity']) && $args['entity']->getId()) {
             // Set custom route with parameters
-            $args['returnUrl'] = $this->generateUrl('mautic_companytag_index');
+            $args['returnUrl']       = $this->generateUrl('mautic_companytag_index');
             $args['contentTemplate'] = 'MauticPlugin\LeuchtfeuerCompanyTagsBundle\Controller\CompanyTagController::indexAction';
         }
 

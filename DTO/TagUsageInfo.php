@@ -12,8 +12,8 @@ class TagUsageInfo
 {
     /**
      * @param array<CompanyTrigger> $triggers
-     * @param array<Campaign> $campaigns
-     * @param array<Form|null> $forms
+     * @param array<Campaign>       $campaigns
+     * @param array<Form|null>      $forms
      */
     public function __construct(
         private array $triggers = [],
@@ -56,17 +56,17 @@ class TagUsageInfo
         $parts = [];
 
         if (!empty($this->triggers)) {
-            $triggerIds = array_map(fn($trigger) => $trigger->getId(), $this->triggers);
-            $parts[] = sprintf('Company Point Trigger ID: %s', implode(', ', $triggerIds));
+            $triggerIds = array_map(fn ($trigger) => $trigger->getId(), $this->triggers);
+            $parts[]    = sprintf('Company Point Trigger ID: %s', implode(', ', $triggerIds));
         }
 
         if (!empty($this->campaigns)) {
-            $campaignIds = array_map(fn($campaign) => $campaign->getId(), $this->campaigns);
-            $parts[] = sprintf('Campaign ID: %s', implode(', ', $campaignIds));
+            $campaignIds = array_map(fn ($campaign) => $campaign->getId(), $this->campaigns);
+            $parts[]     = sprintf('Campaign ID: %s', implode(', ', $campaignIds));
         }
 
         if (!empty($this->forms)) {
-            $formIds = array_map(fn($form) => $form->getId(), array_filter($this->forms));
+            $formIds = array_map(fn ($form) => $form->getId(), array_filter($this->forms));
             $parts[] = sprintf('Form ID: %s', implode(', ', $formIds));
         }
 
