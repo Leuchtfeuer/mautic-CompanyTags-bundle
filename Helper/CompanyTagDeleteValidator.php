@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\Helper;
 
+use Mautic\CampaignBundle\Entity\Campaign;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Entity\EventRepository;
 use Mautic\FormBundle\Entity\Action;
+use Mautic\FormBundle\Entity\Form;
 use Mautic\FormBundle\Model\ActionModel;
+use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTrigger;
 use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Entity\CompanyTriggerEvent;
 use MauticPlugin\LeuchtfeuerCompanyPointsBundle\Model\CompanyTriggerEventModel;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagDeletionValidationResult;
@@ -15,10 +18,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO\TagUsageInfo;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 
-/**
- * Helper class to validate if company tags can be deleted.
- * Checks if tags are still in use in company point triggers.
- */
+
 class CompanyTagDeleteValidator
 {
     public function __construct(
@@ -30,8 +30,6 @@ class CompanyTagDeleteValidator
     }
 
     /**
-     * Validate which tags can be deleted and which are still in use.
-     * Checks usage in: Company Point Triggers, Campaigns (TODO), Forms (TODO).
      *
      * @param array<int> $tagIds Array of tag IDs to validate
      *
@@ -43,29 +41,22 @@ class CompanyTagDeleteValidator
         /** @var array<string, TagUsageInfo> $blockedTags */
         $blockedTags = [];
 
-        foreach ($tagIds as $tagId) {
-            $entity = $this->companyTagModel->getRepository()->find($tagId);
+        $tags = $this->loadTags($tagIds);
+        
+        $triggerUsageMap = $this->buildTriggerUsageMap();
+        $campaignUsageMap = $this->buildCampaignUsageMap();
+        $formUsageMap = $this->buildFormUsageMap();
 
-            if (!$entity instanceof CompanyTags) {
-                continue;
-            }
-
+        foreach ($tags as $tagId => $entity) {
             $entityId = $entity->getId();
             if (null === $entityId) {
                 continue;
             }
 
-            // Check usage in triggers
-            $usedInTriggerEvents = $this->checkTagUsageInPointTriggers($entityId);
-            $usedInTriggers = array_map(fn($triggerEvent) => $triggerEvent->getTrigger(), $usedInTriggerEvents);
+            $usedInTriggers = $triggerUsageMap[$entityId] ?? [];
+            $usedInCampaigns = $campaignUsageMap[$entityId] ?? [];
+            $usedInForms = $formUsageMap[$entityId] ?? [];
 
-            $usedInCampaignEvents = $this->checkTagUsageInCampaigns($entityId);
-            $usedInCampaigns = array_map(fn($campaignEvent) => $campaignEvent->getCampaign(), $usedInCampaignEvents);
-
-            $usedInFormActions = $this->checkTagUsageInForms($entityId);
-            $usedInForms = array_map(fn($formAction) => $formAction->getForm(), $usedInFormActions);
-
-            // Create usage info
             $usageInfo = new TagUsageInfo(
                 triggers: $usedInTriggers,
                 campaigns: $usedInCampaigns,
@@ -86,100 +77,139 @@ class CompanyTagDeleteValidator
     }
 
     /**
-     * Check if a tag is used in any company point triggers.
      *
-     * @param int $tagId
-     *
-     * @return CompanyTriggerEvent[]
+     * @param array<int> $tagIds
+     * @return array<int, CompanyTags>
      */
-    private function checkTagUsageInPointTriggers(int $tagId): array
+    private function loadTags(array $tagIds): array
     {
-        $usedInTriggers = [];
+        if (empty($tagIds)) {
+            return [];
+        }
+
+        $tags = $this->companyTagModel->getRepository()->findBy(['id' => $tagIds]);
+        $result = [];
+        
+        foreach ($tags as $tag) {
+            if ($tag instanceof CompanyTags) {
+                $id = $tag->getId();
+                if (null !== $id) {
+                    $result[$id] = $tag;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<int, array<int, CompanyTrigger>>
+     */
+    private function buildTriggerUsageMap(): array
+    {
+        /** @var array<int, array<int, CompanyTrigger>> $usageMap */
+        $usageMap = [];
         $allTriggerEvents = $this->companyTriggerEventModel->getRepository()->findBy(['type' => 'companytags.updatetags']);
 
         foreach ($allTriggerEvents as $triggerEvent) {
             $properties = $triggerEvent->getProperties();
+            $trigger = $triggerEvent->getTrigger();
 
-            // Check if tag is in add_tags
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
-                if (in_array($tagId, $properties['add_tags'])) {
-                    $usedInTriggers[] = $triggerEvent;
-                    continue;
+                foreach ($properties['add_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $trigger;
                 }
             }
 
-            // Check if tag is in remove_tags
             if (isset($properties['remove_tags']) && is_array($properties['remove_tags'])) {
-                if (in_array($tagId, $properties['remove_tags'])) {
-                    $usedInTriggers[] = $triggerEvent;
+                foreach ($properties['remove_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $trigger;
                 }
             }
         }
 
-        return $usedInTriggers;
+        return $usageMap;
     }
 
     /**
-     *
-     * @return Event[]
+     * @return array<int, array<int, Campaign>>
      */
-    private function checkTagUsageInCampaigns(int $tagId): array
+    private function buildCampaignUsageMap(): array
     {
+        /** @var array<int, array<int, Campaign>> $usageMap */
+        $usageMap = [];
+        $allCampaignEvents = $this->campaignEventRepository->findBy(['type' => 'companytag.changetags']);
 
-        $usedInCampaignEvents = [];
-        $allCamaignEvents = $this->campaignEventRepository->findBy(['type' => 'companytag.changetags']);
-
-        foreach ($allCamaignEvents as $campaignEvent) {
+        foreach ($allCampaignEvents as $campaignEvent) {
             $properties = $campaignEvent->getProperties();
+            $campaign = $campaignEvent->getCampaign();
 
-            // Check if tag is in add_tags
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
-                if (in_array($tagId, $properties['add_tags'])) {
-                    $usedInCampaignEvents[] = $campaignEvent;
-                    continue;
+                foreach ($properties['add_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $campaign;
                 }
             }
 
-            // Check if tag is in remove_tags
             if (isset($properties['remove_tags']) && is_array($properties['remove_tags'])) {
-                if (in_array($tagId, $properties['remove_tags'])) {
-                    $usedInCampaignEvents[] = $campaignEvent;
+                foreach ($properties['remove_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $campaign;
                 }
             }
         }
 
-        return $usedInCampaignEvents;
+        return $usageMap;
     }
 
     /**
-     *
-     * @return Action[]
+     * @return array<int, array<int, Form|null>>
      */
-    private function checkTagUsageInForms(int $tagId): array
+    private function buildFormUsageMap(): array
     {
-        $usedInFormActions = [];
+        /** @var array<int, array<int, Form|null>> $usageMap */
+        $usageMap = [];
         $allFormActions = $this->formActionModel->getRepository()->findBy(['type' => 'companytag.changetags']);
-
 
         foreach ($allFormActions as $formAction) {
             $properties = $formAction->getProperties();
+            $form = $formAction->getForm();
 
-            // Check if tag is in add_tags
             if (isset($properties['add_tags']) && is_array($properties['add_tags'])) {
-                if (in_array($tagId, $properties['add_tags'])) {
-                    $usedInFormActions[] = $formAction;
-                    continue;
+                foreach ($properties['add_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $form;
                 }
             }
 
-            // Check if tag is in remove_tags
             if (isset($properties['remove_tags']) && is_array($properties['remove_tags'])) {
-                if (in_array($tagId, $properties['remove_tags'])) {
-                    $usedInFormActions[] = $formAction;
+                foreach ($properties['remove_tags'] as $tagId) {
+                    $tagId = (int) $tagId;
+                    if (!isset($usageMap[$tagId])) {
+                        $usageMap[$tagId] = [];
+                    }
+                    $usageMap[$tagId][] = $form;
                 }
             }
         }
 
-        return $usedInFormActions;
+        return $usageMap;
     }
 }

@@ -23,13 +23,8 @@ final class FixtureHelper
     ) {
     }
 
-    // ============================================================
-    // Plugin Management
-    // ============================================================
-
     public function createAndEnablePlugin(): void
     {
-        // Check if plugin already exists
         $plugin = $this->em->getRepository(Plugin::class)->findOneBy(['bundle' => 'LeuchtfeuerCompanyTagsBundle']);
         if (!$plugin) {
             $plugin = new Plugin();
@@ -39,7 +34,6 @@ final class FixtureHelper
             $this->em->flush();
         }
 
-        // Check if integration already exists
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'leuchtfeuercompanytags']);
         if (!$integration) {
             $integration = new Integration();
@@ -49,7 +43,6 @@ final class FixtureHelper
             $this->em->persist($integration);
             $this->em->flush();
         } else {
-            // Ensure it's enabled
             $integration->setIsPublished(true);
             $this->em->flush();
         }
@@ -57,7 +50,6 @@ final class FixtureHelper
 
     public function enableCompanyPointsPlugin(): void
     {
-        // Check if plugin already exists
         $plugin = $this->em->getRepository(Plugin::class)->findOneBy(['bundle' => 'LeuchtfeuerCompanyPointsBundle']);
         if (!$plugin) {
             $plugin = new Plugin();
@@ -67,7 +59,6 @@ final class FixtureHelper
             $this->em->flush();
         }
 
-        // Check if integration already exists
         $integration = $this->em->getRepository(Integration::class)->findOneBy(['name' => 'LeuchtfeuerCompanyPoints']);
         if (!$integration) {
             $integration = new Integration();
@@ -77,15 +68,10 @@ final class FixtureHelper
             $this->em->persist($integration);
             $this->em->flush();
         } else {
-            // Ensure it's enabled
             $integration->setIsPublished(true);
             $this->em->flush();
         }
     }
-
-    // ============================================================
-    // Company Tags
-    // ============================================================
 
     public function createCompanyTag(string $name): CompanyTags
     {
@@ -96,10 +82,6 @@ final class FixtureHelper
 
         return $tag;
     }
-
-    // ============================================================
-    // Company Point Triggers
-    // ============================================================
 
     public function createCompanyTrigger(string $name, int $points = 10): CompanyTrigger
     {
@@ -114,7 +96,6 @@ final class FixtureHelper
     }
 
     /**
-     * Create a trigger event that adds/removes company tags.
      *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
@@ -138,10 +119,6 @@ final class FixtureHelper
         return $event;
     }
 
-    // ============================================================
-    // Campaigns
-    // ============================================================
-
     public function createCampaign(string $name): Campaign
     {
         $campaign = new Campaign();
@@ -154,7 +131,6 @@ final class FixtureHelper
     }
 
     /**
-     * Create a campaign event that changes company tags.
      *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
@@ -179,10 +155,6 @@ final class FixtureHelper
         return $event;
     }
 
-    // ============================================================
-    // Forms
-    // ============================================================
-
     public function createForm(string $name): Form
     {
         $form = new Form();
@@ -197,7 +169,6 @@ final class FixtureHelper
     }
 
     /**
-     * Create a form action that changes company tags.
      *
      * @param array<int> $addTagIds
      * @param array<int> $removeTagIds
@@ -221,10 +192,6 @@ final class FixtureHelper
 
         return $action;
     }
-
-    // ============================================================
-    // Companies
-    // ============================================================
 
     /**
      * @param array<string, mixed> $data

@@ -51,10 +51,6 @@ class TagUsageInfo
         return !empty($this->triggers) || !empty($this->campaigns) || !empty($this->forms);
     }
 
-    /**
-     * Format usage info as string for error messages.
-     * Example: "Company Point Trigger ID: 5, 4 / Campaign ID: 12, 134 / Form ID: 1, 2"
-     */
     public function formatUsageString(): string
     {
         $parts = [];

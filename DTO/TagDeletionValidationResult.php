@@ -7,8 +7,8 @@ namespace MauticPlugin\LeuchtfeuerCompanyTagsBundle\DTO;
 class TagDeletionValidationResult
 {
     /**
-     * @param array<int> $deletableIds IDs of tags that can be safely deleted
-     * @param array<string, TagUsageInfo> $blockedTags Tags that cannot be deleted (tag name => TagUsageInfo)
+     * @param array<int> $deletableIds
+     * @param array<string, TagUsageInfo> $blockedTags
      */
     public function __construct(
         private array $deletableIds,
