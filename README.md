@@ -1,8 +1,10 @@
-# Plugin: Company Tags by Leuchtfeuer
+# DEPRECATED Plugin: Company Tags by Leuchtfeuer
 
 
 
 ## Overview
+
+DEPRECATION: As of today, we feel that things can be achieved through Company Segments equally well or better. Therefore we do not intend to bring Company Tags to the future, instead focus on making Company Segments even better :)
 
 This plugin brings company-based Tagging to Mautic.
 
@@ -82,7 +84,8 @@ and
 `php bin/console mautic:assets:generate`
 
 ## Known Issues
-* In the Company Tahgs view, bulk delete is currently not working
+* In the Company Tags view, bulk delete is currently not working
+* Tags that are in use are protected from deletion, but NOT via API
 
 ## Future Ideas
 * Add single and bulk action for modifiying Company Tags to Company list view
