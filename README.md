@@ -84,7 +84,7 @@ and
 `php bin/console mautic:assets:generate`
 
 ## Known Issues
-* Deleting tags which are in use (in campaign actions, form actions or company trigger actions) os prevented in UI but not when deleting tags via API.
+* Tags that are in use are protected from deletion, but NOT via API
 
 ## Future Ideas
 * Add single and bulk action for modifiying Company Tags to Company list view
