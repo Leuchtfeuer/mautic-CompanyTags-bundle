@@ -84,7 +84,6 @@ and
 `php bin/console mautic:assets:generate`
 
 ## Known Issues
-* In the Company Tahgs view, bulk delete is currently not working
 * Tags that are in use are protected from deletion, but NOT via API
 
 ## Future Ideas
