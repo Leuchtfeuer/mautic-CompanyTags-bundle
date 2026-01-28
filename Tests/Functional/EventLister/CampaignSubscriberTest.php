@@ -16,9 +16,9 @@ class CampaignSubscriberTest extends MauticMysqlTestCase
 {
     public function setUp(): void
     {
+        $this->useCleanupRollback = false;
         parent::setUp();
         $this->activePlugin();
-        $this->useCleanupRollback = false;
         $this->setUpSymfony($this->configParams);
     }
 
