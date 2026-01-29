@@ -12,6 +12,7 @@ class CompanyTagsControllerTest extends MauticMysqlTestCase
 {
     public function setUp(): void
     {
+        $this->useCleanupRollback = false;
         parent::setUp();
         $this->activePlugin();
         $this->loginAdminUser();
