@@ -3,7 +3,7 @@
 return [
     'name'        => 'Company Tags by Leuchtfeuer',
     'description' => 'Provide a 2nd type of Tags which can be applied to Companies',
-    'version'     => '6.0.0',
+    'version'     => '6.0.1',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'services'    => [
         'integrations' => [
