@@ -4,8 +4,10 @@
 
 ## Overview
 
-DEPRECATION: As of today, we feel that things can be achieved through Company Segments equally well or better. Therefore we do not intend to bring Company Tags to the future, instead focus on making Company Segments even better :)
-
+> [!IMPORTANT]
+> **DEPRECATION**: As of today, we feel that things can be achieved through Company Segments equally well or better. Therefore we do not intend to bring Company Tags to the future, instead focus on making Company Segments even better!
+> 
+> However, **for Mautic 5 and 6, the CompanyTags plugin is required for many parts of the "ABM" company marketing plugin suite.**
 This plugin brings company-based Tagging to Mautic.
 
 It is part of the "ABM" suite of plugins that extends Mautic capabilities for working with Companies.
