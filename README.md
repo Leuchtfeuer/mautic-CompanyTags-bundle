@@ -87,12 +87,17 @@ and
 * Tags that are in use are protected from deletion, but NOT via API
 
 ## Future Ideas
-* Add single and bulk action for modifiying Company Tags to Company list view
+* no further features intended (DEPRECATION)
 
 ## Credits
-* @lenonleite
+* @biozshock
 * @ekkeguembel
 * @JonasLudwig1998
+* @lenonleite
+* @LeonOltmanns
+* @MadlenF
+* @PatrickJenkner
+* @patrykgruszka
 
 ## Author and Contact
 Leuchtfeuer Digital Marketing GmbH
