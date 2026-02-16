@@ -12,6 +12,7 @@ use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Form\Type\ModifyCompanyTagsType;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Entity\CompanyTags;
 
 class FormSubscriber implements EventSubscriberInterface
 {
@@ -62,7 +63,12 @@ class FormSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $properties  = $event->getAction()->getProperties();
+        $action = $event->getAction();
+        if (null === $action) {
+            return;
+        }
+
+        $properties  = $action->getProperties();
         $addTags     = $properties['add_tags'] ?: [];
         $removeTags  = $properties['remove_tags'] ?: [];
         $companyName = $lead->getCompany();
@@ -74,14 +80,16 @@ class FormSubscriber implements EventSubscriberInterface
             return;
         }
 
+        /** @var array<CompanyTags> $tagsToAdd */
         $tagsToAdd = $this->companyTagsModel->getRepository()->findBy(
             [
-                'tag'     => $addTags,
+                'id'     => $addTags,
             ]
         );
+        /** @var array<CompanyTags> $tagsToRemove */
         $tagsToRemove = $this->companyTagsModel->getRepository()->findBy(
             [
-                'tag'     => $removeTags,
+                'id'     => $removeTags,
             ]
         );
         $this->companyTagsModel->updateCompanyTags($company, $tagsToAdd, $tagsToRemove);
