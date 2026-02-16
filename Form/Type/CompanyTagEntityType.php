@@ -20,8 +20,6 @@ class CompanyTagEntityType extends AbstractType
     {
         $builder->add('buttons', FormButtonsType::class);
         $builder->addEventSubscriber(new CleanFormSubscriber(['description' => 'strict_html']));
-        // We only allow to set tag field value if we are creating new tag.
-        $tagReadOnly = !empty($options['data']) && $options['data']->getId() ? true : false;
 
         $builder->add(
             'tag',
@@ -29,7 +27,7 @@ class CompanyTagEntityType extends AbstractType
             [
                 'label'       => 'mautic.core.name',
                 'label_attr'  => ['class' => 'control-label'],
-                'attr'        => ['class' => 'form-control', 'readonly' => $tagReadOnly],
+                'attr'        => ['class' => 'form-control'],
                 'constraints' => [
                     new NotBlank(
                         [
@@ -51,7 +49,7 @@ class CompanyTagEntityType extends AbstractType
             ]
         );
 
-        if (!empty($options['action'])) {
+        if (!empty($options['action']) && is_string($options['action'])) {
             $builder->setAction($options['action']);
         }
     }
