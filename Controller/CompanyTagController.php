@@ -11,6 +11,7 @@ use Mautic\CoreBundle\Security\Permissions\CorePermissions;
 use Mautic\CoreBundle\Service\FlashBag;
 use Mautic\CoreBundle\Translation\Translator;
 use Mautic\FormBundle\Helper\FormFieldHelper;
+use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Helper\CompanyTagDeleteValidator;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerCompanyTagsBundle\Model\CompanyTagModel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -23,7 +24,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CompanyTagController extends AbstractStandardFormController
 {
-    // @phpstan-ignore-next-line
     public function __construct(
         FormFactoryInterface $formFactory,
         FormFieldHelper $fieldHelper,
@@ -38,6 +38,7 @@ class CompanyTagController extends AbstractStandardFormController
         CorePermissions $security,
         private CompanyTagModel $companyTagModel,
         private Config $config,
+        private CompanyTagDeleteValidator $deleteValidator,
     ) {
         parent::__construct($formFactory, $fieldHelper, $managerRegistry, $modelFactory, $userHelper, $coreParametersHelper, $dispatcher, $translator, $flashBag, $requestStack, $security);
         if (!$this->config->isPublished()) {
@@ -194,19 +195,118 @@ class CompanyTagController extends AbstractStandardFormController
         return $this->editStandard($request, $objectId, $ignorePost);
     }
 
-    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse
+    public function deleteAction(Request $request, int $objectId): RedirectResponse|JsonResponse|Response
     {
+        $validationResult = $this->deleteValidator->validateForDeletion([$objectId]);
+
+        if ($validationResult->hasBlockedTags()) {
+            $this->addFlashMessage(
+                $this->translator->trans('mautic.company_tags.error.in_use').' '.$validationResult->getBlockedTagsList(),
+                [],
+                'error'
+            );
+
+            $page      = $request->getSession()->get('mautic.'.$this->getSessionBase().'.page', 1);
+            $returnUrl = $this->generateUrl($this->getIndexRoute(), ['page' => $page]);
+
+            return $this->postActionRedirect([
+                'returnUrl'       => $returnUrl,
+                'viewParameters'  => ['page' => $page],
+                'contentTemplate' => $this->getControllerBase().'::'.$this->getPostActionControllerAction('index').'Action',
+                'passthroughVars' => [
+                    'mauticContent' => $this->getJsLoadMethodPrefix(),
+                ],
+            ]);
+        }
+
         return $this->deleteStandard($request, $objectId);
     }
 
-    /**
-     * Deletes a group of entities.
-     *
-     * @return JsonResponse|RedirectResponse
-     */
-    public function batchDeleteAction(Request $request)
+    public function batchDeleteAction(Request $request): JsonResponse|RedirectResponse|Response
     {
-        return $this->batchDeleteStandard($request);
+        $page      = $request->getSession()->get('mautic.'.$this->getSessionBase().'.page', 1);
+        $returnUrl = $this->generateUrl($this->getIndexRoute(), ['page' => $page]);
+        $flashes   = [];
+
+        $postActionVars = [
+            'returnUrl'       => $returnUrl,
+            'viewParameters'  => ['page' => $page],
+            'contentTemplate' => $this->getControllerBase().'::'.$this->getPostActionControllerAction('batchDelete').'Action',
+            'passthroughVars' => [
+                'mauticContent' => $this->getJsLoadMethodPrefix(),
+            ],
+        ];
+
+        if ('POST' == $request->getMethod()) {
+            $model     = $this->getModel($this->getModelName());
+            \assert($model instanceof CompanyTagModel);
+            $ids       = json_decode($request->query->get('ids', ''));
+            $deleteIds = [];
+
+            if (!is_array($ids)) {
+                $ids = [];
+            }
+
+            foreach ($ids as $objectId) {
+                if (!is_int($objectId) && !is_string($objectId)) {
+                    continue;
+                }
+
+                $objectId = (int) $objectId;
+                $entity   = $model->getEntity($objectId);
+
+                if (null === $entity) {
+                    $flashes[] = [
+                        'type'    => 'error',
+                        'msg'     => $this->getTranslatedString('error.notfound'),
+                        'msgVars' => ['%id%' => $objectId],
+                    ];
+                } elseif (!$this->checkActionPermission('batchDelete', $entity)) {
+                    $flashes[] = $this->accessDenied(true);
+                } elseif ($model->isLocked($entity)) {
+                    $flashes[] = $this->isLocked($postActionVars, $entity, $this->getModelName(), true);
+                } else {
+                    $deleteIds[] = $objectId;
+                }
+            }
+
+            if (!empty($deleteIds)) {
+                $validationResult = $this->deleteValidator->validateForDeletion($deleteIds);
+
+                if ($validationResult->hasBlockedTags()) {
+                    $blockedTagsList  = $validationResult->getBlockedTagsList();
+                    $translatedPrefix = $this->translator->trans('mautic.company_tags.error.in_use');
+                    $flashes[]        = [
+                        'type' => 'error',
+                        'msg'  => $translatedPrefix.' '.$blockedTagsList,
+                    ];
+                }
+
+                if ($validationResult->hasDeletableTags()) {
+                    $entities = $model->deleteEntities($validationResult->getDeletableIds());
+
+                    $flashes[] = [
+                        'type'    => 'notice',
+                        'msg'     => $this->getTranslatedString('notice.batch_deleted'),
+                        'msgVars' => [
+                            '%count%' => count($entities),
+                        ],
+                    ];
+                }
+            }
+        }
+
+        return $this->postActionRedirect(
+            $this->getPostActionRedirectArguments(
+                array_merge(
+                    $postActionVars,
+                    [
+                        'flashes' => $flashes,
+                    ]
+                ),
+                'batchDelete'
+            )
+        );
     }
 
     protected function getModelName(): string
@@ -256,9 +356,8 @@ class CompanyTagController extends AbstractStandardFormController
         ]);
     }
 
-
     /**
-     * // @phpstan-ignore-next-line
+     * // @phpstan-ignore-next-line.
      */
     protected function getPostActionRedirectArguments(array $args, $action): array
     {
