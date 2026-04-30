@@ -1,7 +1,7 @@
 {
   "name": "leuchtfeuer/mautic-companytags-bundle",
   "description": "Provide a 2nd type of Tags which can be applied to Companies",
-  "license": "GPL-3.0-or-later",
+  "license": "GPL-3.0",
   "type": "mautic-plugin",
   "authors": [
     {
