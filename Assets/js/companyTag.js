@@ -25,7 +25,7 @@ Mautic.createCompanyTag = function (el) {
 };
 
 Mautic.removeCompanyCompanyTag = function (el) {
-    mQuery(el).removeClass('fa-times').addClass('fa-spinner fa-spin');
+    mQuery(el).removeClass('ri-close-line').addClass('ri-loader-3-line ri-spin');
     var companyId = mQuery(el).attr('data-company-id');
     var tagId = mQuery(el).attr('data-tag-id');
     Mautic.ajaxActionRequest('plugin:LeuchtfeuerCompanyTags:removeCompanyCompanyTag',
