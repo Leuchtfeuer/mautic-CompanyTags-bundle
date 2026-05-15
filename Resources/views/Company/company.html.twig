@@ -164,7 +164,7 @@
                                 </h5>
                             </div>
                             <div class="col-xs-4 va-t text-right">
-                                <h3 class="text-white dark-sm"><span class="fa fa-eye"></span></h3>
+                                <h3 class="text-white dark-sm"><span class="ri-eye-line"></span></h3>
                             </div>
                         </div>
                         {{ include('@MauticCore/Helper/chart.html.twig', {
@@ -248,7 +248,7 @@
                                     <a href="{{ path('mautic_companytag_action', {'objectAction': 'view', 'objectId': tag.id}) }}" data-toggle="ajax" class="" style="color: white;">
                                          {{ tag.tag|purify }}
                                     </a>
-                                    <i data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}" class="fa fa-times has-click-event" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)"></i>
+                                    <i data-toggle="tooltip" title="{{ 'mautic.companytag.companytags.tooltip.removetag'|trans }}" class="ri-close-line has-click-event" data-company-id="{{ company.id }}" data-tag-id="{{ tag.id }}" onclick="Mautic.removeCompanyCompanyTag(this)"></i>
                                 </span>
                             </h5>
                         </p>
