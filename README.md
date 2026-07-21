@@ -89,6 +89,7 @@ and
 
 ## Known Issues
 * Tags that are in use are protected from deletion, but NOT via API
+* Campaign Action which Adds Tags does not work properly
 
 ## Future Ideas
 * no further features intended (DEPRECATION)
